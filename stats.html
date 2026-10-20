@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontrolpanel – Besøgsstatistik & Trafikanalyse</title>
+  <meta name="description" content="Professionelt administrativt kontrolpanel med live-simuleret besøgsstatistik, trafikanalyser og overblik i realtid på dansk.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans for moderne typografi -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    
+    <!-- Mobil overlay når sidebaren er åben -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-container">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18" />
+              <path d="m19 9-5 5-4-4-3 3" />
+            </svg>
+          </div>
+          <div class="brand-details">
+            <span class="brand-title">NordicAdmin</span>
+            <span class="brand-subtitle">Erhvervsportal</span>
+          </div>
+        </div>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Luk menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Hovedmenu</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#" class="nav-link active" data-view="dashboard">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              <span>Kontrolpanel</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#trafik-sektion" class="nav-link" data-view="analytics">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              <span>Besøgsstatistik</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#sidevisninger-sektion" class="nav-link" data-view="pages">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <span>Seneste sidevisninger</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#kilder-sektion" class="nav-link" data-view="sources">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <span>Trafikkilder</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-section-label">Administration</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#" class="nav-link" id="exportReportBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Eksportér rapport</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" id="settingsBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              <span>Indstillinger</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status-indicator">
+          <span class="pulse-dot"></span>
+          <div class="status-text">
+            <strong>Systemdrift</strong>
+            <small>Normal tilstand</small>
+          </div>
+        </div>
+        <div class="simulation-toggle-box">
+          <span class="sim-label">Live-opdatering:</span>
+          <button id="toggleSimBtn" class="sim-btn active" title="Slå live-opdatering til/fra">Aktiv</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-container">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="top-navbar">
+        <div class="navbar-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Åbn navigationsmenu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="page-headline">
+            <h1>Kontrolpanel</h1>
+            <p class="page-subhead">Overvågning af webtrafik og brugeradfærd</p>
+          </div>
+        </div>
+
+        <div class="navbar-right">
+          <!-- Datointerval vælger -->
+          <div class="date-selector-wrapper">
+            <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <select id="dateRangeSelect" class="date-range-select" aria-label="Vælg datointerval">
+              <option value="today">I dag (15. okt. 2026)</option>
+              <option value="7days" selected>Seneste 7 dage</option>
+              <option value="30days">Seneste 30 dage</option>
+              <option value="month">Denne måned (oktober)</option>
+              <option value="quarter">Sidste kvartal</option>
+            </select>
+          </div>
+
+          <!-- Opdater knap -->
+          <button id="refreshDataBtn" class="btn btn-secondary refresh-btn" title="Hent seneste data">
+            <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+            <span>Opdater data</span>
+          </button>
+
+          <!-- Administrator profil demo -->
+          <div class="user-profile-widget">
+            <div class="avatar-circle">AD</div>
+            <div class="user-info">
+              <span class="user-name">Administrator</span>
+              <span class="user-role">Dansk Erhverv</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- DEMO DATA ADVARSEL / NOTITS (Påkrævet i krav) -->
+      <div class="demo-notice-banner" role="alert">
+        <div class="notice-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="notice-content">
+          <span class="notice-badge">Live: Aktive besøgende</span>
+          <p class="notice-text">
+            <strong>Aktive besøgende</strong> og <strong>Besøg i dag</strong> hentes live fra siden. Diagrammer og tabellen er demonstrations-UI.
+          </p>
+        </div>
+        <div class="notice-timestamp" id="lastUpdatedNotice">Sidst opdateret: Lige nu</div>
+      </div>
+
+      <!-- HOVEDINDHOLD / DASHBOARD BODY -->
+      <main class="dashboard-body">
+
+        <!-- STATISTIK-KORT (FIRE NØGLETAL) -->
+        <section class="stats-grid" aria-label="Nøgletal for kontrolpanelet">
+          
+          <!-- Kort 1: Aktive besøgende (live simulation) -->
+          <div class="stat-card stat-live">
+            <div class="stat-header">
+              <div class="stat-meta">
+                <span class="stat-title">Aktive besøgende</span>
+                <span class="live-pill">
+                  <span class="pulsing-circle"></span>
+                  Lige nu
+                </span>
+              </div>
+              <div class="stat-icon-wrapper bg-emerald">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value-group">
+                <span class="stat-value" id="activeVisitorsCount">–</span>
+                <span class="stat-unit">online</span>
+              </div>
+              <div class="stat-trend positive">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span id="activeVisitorsTrend">+5 i seneste 10 min.</span>
+              </div>
+            </div>
+            <div class="stat-footer-text">Opdateres automatisk i realtid</div>
+          </div>
+
+          <!-- Kort 2: Besøg i dag -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-meta">
+                <span class="stat-title">Besøg i dag</span>
+                <span class="stat-subtitle">Unikke sessioner</span>
+              </div>
+              <div class="stat-icon-wrapper bg-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value-group">
+                <span class="stat-value" id="todayVisitsCount">–</span>
+              </div>
+              <div class="stat-trend positive">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+12,4% ift. i går</span>
+              </div>
+            </div>
+            <div class="stat-footer-text">Samlede events fra loggen</div>
+          </div>
+
+          <!-- Kort 3: Sidevisninger -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-meta">
+                <span class="stat-title">Sidevisninger</span>
+                <span class="stat-subtitle">Totale indlæsninger</span>
+              </div>
+              <div class="stat-icon-wrapper bg-indigo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value-group">
+                <span class="stat-value" id="pageviewsCount">11.892</span>
+              </div>
+              <div class="stat-trend positive">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+8,9% denne uge</span>
+              </div>
+            </div>
+            <div class="stat-footer-text">Gennemsnit: 3,48 sider pr. besøg</div>
+          </div>
+
+          <!-- Kort 4: Gennemsnitlig sessionsvarighed -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-meta">
+                <span class="stat-title">Sessionsvarighed</span>
+                <span class="stat-subtitle">Gns. tid på webstedet</span>
+              </div>
+              <div class="stat-icon-wrapper bg-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="12" x2="16" y2="12"></line>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value-group">
+                <span class="stat-value" id="avgDurationCount">3m 42s</span>
+              </div>
+              <div class="stat-trend neutral">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+                <span>Afvisningsprocent: 32,1%</span>
+              </div>
+            </div>
+            <div class="stat-footer-text">Stabil fastholdelse af besøgende</div>
+          </div>
+
+        </section>
+
+        <!-- DIAGRAM SEKTION: LINJEDIAGRAM & SØJLEDIAGRAM -->
+        <section class="charts-section" id="trafik-sektion" aria-label="Diagrammer over besøgsstatistik">
+          
+          <!-- Linjediagram: Besøgsstatistik over tid -->
+          <div class="chart-card line-chart-card">
+            <div class="chart-header">
+              <div class="chart-title-area">
+                <h2 class="chart-title">Besøgsstatistik</h2>
+                <p class="chart-description">Trafikudvikling og interaktioner i den valgte periode</p>
+              </div>
+              <div class="chart-legend-custom">
+                <span class="legend-badge current-period">
+                  <span class="legend-dot dot-blue"></span>
+                  Nuværende periode
+                </span>
+                <span class="legend-badge prev-period">
+                  <span class="legend-dot dot-gray"></span>
+                  Forrige periode
+                </span>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="visitorTrafficChart" aria-label="Linjediagram over besøgstrafik" role="img"></canvas>
+            </div>
+            <div class="chart-footer-meta">
+              <span>💡 Bemærk: Toppunkter falder typisk i tidsrummet kl. 10:00–14:00 på hverdage.</span>
+            </div>
+          </div>
+
+          <!-- Søjlediagram: Daglige besøg -->
+          <div class="chart-card bar-chart-card">
+            <div class="chart-header">
+              <div class="chart-title-area">
+                <h2 class="chart-title">Daglige besøg</h2>
+                <p class="chart-description">Fordeling af unikke sessioner pr. ugedag</p>
+              </div>
+              <div class="chart-badge-pill">Ugentlig fordeling</div>
+            </div>
+            <div class="chart-container">
+              <canvas id="dailyVisitsChart" aria-label="Søjlediagram over daglige besøg" role="img"></canvas>
+            </div>
+            <div class="chart-footer-meta">
+              <span>Højeste aktivitet: Torsdag (3.840 besøg)</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- EKSTRA OVERSIGTSKORT: ENHEDER & TRAFIKKILDER -->
+        <section class="breakdown-grid" id="kilder-sektion" aria-label="Trafikkilder og enhedsfordeling">
+          
+          <!-- Trafikkilder -->
+          <div class="card breakdown-card">
+            <div class="card-header">
+              <h3 class="card-title">Primære trafikkilder</h3>
+              <span class="badge-subtle">Top 4</span>
+            </div>
+            <div class="sources-list">
+              <div class="source-item">
+                <div class="source-info">
+                  <span class="source-name">Organisk søgning (Google)</span>
+                  <span class="source-percentage">48,2%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill fill-blue" style="width: 48.2%;"></div>
+                </div>
+                <div class="source-stats-sub">5.732 sessioner • Høj konvertering</div>
+              </div>
+
+              <div class="source-item">
+                <div class="source-info">
+                  <span class="source-name">Direkte adresseindtastning</span>
+                  <span class="source-percentage">26,5%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill fill-indigo" style="width: 26.5%;"></div>
+                </div>
+                <div class="source-stats-sub">3.151 sessioner • Faste brugere</div>
+              </div>
+
+              <div class="source-item">
+                <div class="source-info">
+                  <span class="source-name">Professionelle netværk (LinkedIn)</span>
+                  <span class="source-percentage">15,8%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill fill-emerald" style="width: 15.8%;"></div>
+                </div>
+                <div class="source-stats-sub">1.878 sessioner • Erhvervskunder</div>
+              </div>
+
+              <div class="source-item">
+                <div class="source-info">
+                  <span class="source-name">Nyhedsbrev & direkte kampagner</span>
+                  <span class="source-percentage">9,5%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill fill-amber" style="width: 9.5%;"></div>
+                </div>
+                <div class="source-stats-sub">1.131 sessioner • Tilmeldte modtagere</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Enhedsfordeling -->
+          <div class="card breakdown-card">
+            <div class="card-header">
+              <h3 class="card-title">Enhedsfordeling</h3>
+              <span class="badge-subtle">Hardware</span>
+            </div>
+            <div class="device-stats-container">
+              <div class="donut-chart-wrapper">
+                <canvas id="deviceDoughnutChart" width="180" height="180"></canvas>
+              </div>
+              <div class="device-legend-list">
+                <div class="device-row">
+                  <span class="device-dot dot-mobile"></span>
+                  <span class="device-label">Mobiltelefon</span>
+                  <strong class="device-val">58%</strong>
+                </div>
+                <div class="device-row">
+                  <span class="device-dot dot-desktop"></span>
+                  <span class="device-label">Computer (Desktop)</span>
+                  <strong class="device-val">36%</strong>
+                </div>
+                <div class="device-row">
+                  <span class="device-dot dot-tablet"></span>
+                  <span class="device-label">Tablet</span>
+                  <strong class="device-val">6%</strong>
+                </div>
+              </div>
+            </div>
+            <div class="device-summary-note">
+              📱 <strong>Mobil først:</strong> Størstedelen af brugerne tilgår platformen via mobile browsere.
+            </div>
+          </div>
+
+        </section>
+
+        <!-- TABEL SEKTION: SENESTE SIDEVISNINGER -->
+        <section class="table-section" id="sidevisninger-sektion" aria-label="Seneste sidevisninger">
+          <div class="table-card">
+            
+            <div class="table-header">
+              <div class="table-title-area">
+                <div class="table-title-row">
+                  <h2 class="table-title">Seneste sidevisninger</h2>
+                  <span class="table-badge-live">
+                    <span class="pulsing-circle green-sm"></span>
+                    Simuleret realtidslog
+                  </span>
+                </div>
+                <p class="table-description">Log over senest registrerede sidetilgåelser og sessioner på webstedet</p>
+              </div>
+
+              <!-- Tabel kontroller: søgning og filter -->
+              <div class="table-controls">
+                <div class="table-search-box">
+                  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" id="tableSearchInput" placeholder="Søg efter side eller status..." aria-label="Søg i tabellen">
+                </div>
+                <div class="filter-chips">
+                  <button class="chip active" data-filter="alle">Alle</button>
+                  <button class="chip" data-filter="Aktiv">Aktiv</button>
+                  <button class="chip" data-filter="Gennemført">Gennemført</button>
+                  <button class="chip" data-filter="Indlæst">Indlæst</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- RESPONSIV DATATABEL -->
+            <div class="table-responsive">
+              <table class="data-table" id="pageviewsTable">
+                <thead>
+                  <tr>
+                    <th scope="col">Side</th>
+                    <th scope="col">Tidspunkt</th>
+                    <th scope="col">Kilde / Reference</th>
+                    <th scope="col">Enhed</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="pageviewsTableBody">
+                  <!-- Rækker genereres og opdateres dynamisk af JavaScript -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Tabel bundlinje / paginering -->
+            <div class="table-footer">
+              <span class="table-row-count" id="tableRowCount">Viser seneste 8 hændelser</span>
+              <div class="table-actions">
+                <button class="btn btn-sm btn-ghost" id="clearTableLogBtn">Nulstil log</button>
+                <button class="btn btn-sm btn-outline" id="loadMoreRowsBtn">Hent flere rækker</button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      <!-- DASHBOARD FOOTER -->
+      <footer class="dashboard-footer">
+        <div class="footer-left">
+          <p><strong>NordicAdmin Kontrolpanel</strong> &copy; 2026. Standalone analysesystem-demonstration.</p>
+          <p class="footer-subtext">Udviklet i HTML5, CSS3 og Vanilla JavaScript med Chart.js. Ingen database påkrævet.</p>
+        </div>
+        <div class="footer-right">
+          <span class="security-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Sikker demonstration – Ingen ekstern datadeling
+          </span>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- INTERAKTIV TOAST MEDDELELSE -->
+  <div class="toast-notification" id="toastNotification" role="status" aria-live="polite">
+    <div class="toast-icon">✓</div>
+    <div class="toast-message" id="toastMessage">Data er blevet opdateret!</div>
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script src="script.js"></script>
+</body>
+</html>

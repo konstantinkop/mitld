@@ -1,0 +1,15 @@
+InfinityFree (gratis PHP)
+
+1. Skapa konto på infinityfree.com och en ny sajt.
+2. Öppna File Manager / htdocs.
+3. Ladda upp:
+   - index.html
+   - cvr.php
+   - svar.php
+   - mappen img/ (kontor1.jpg och kontor2.jpg)
+4. Öppna https://DIN-SIDA.infinityfreeapp.com/ i Safari.
+
+SØG I CVR går via cvr.php (live på 8 siffror).
+Formuläret skickas via svar.php till Telegram.
+
+Inget Python behövs. Ta inte med server.py.

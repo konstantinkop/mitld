@@ -1,0 +1,7 @@
+data/
+*.jsonl
+Martin/
+Martin.zip
+.DS_Store
+Thumbs.db
+*.log
