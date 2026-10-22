@@ -1,0 +1,68 @@
+# ==============================================================================
+# MitID Apache Configuration (.htaccess) for InfinityFree & LAMP Shared Hosting
+# ==============================================================================
+
+# Directory index preference
+DirectoryIndex index.php index.html
+
+# Default charset
+AddDefaultCharset UTF-8
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Redirect /admin to /#admin for hash-based SPA router
+    RewriteRule ^admin/?$ /#admin [R=302,NE,L]
+
+    # Ensure correct MIME types on InfinityFree / Apache
+    <IfModule mod_mime.c>
+        AddType application/javascript .js
+        AddType text/css .css
+        AddType image/webp .webp
+    </IfModule>
+
+    # Pass Authorization header to PHP under FastCGI/CGI environments
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+    # Prevent direct web access to sensitive config files, data store, and SQL scripts
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^data/ - [F,L]
+    RewriteRule \.(sql|sqlite|sqlite3|env|log)$ - [F,L]
+
+    # Route /api/... requests to api/index.php
+    RewriteCond %{REQUEST_URI} ^(.*)/api/ [NC]
+    RewriteRule ^api/(.*)$ api/index.php?__route__=$1 [QSA,L]
+
+    # Alias brandlogo.webp to brabdlogo.webp
+    RewriteRule ^brandlogo\.webp$ brabdlogo.webp [L]
+
+    # Aliases for unhashed asset URLs
+    RewriteRule ^assets/index\.js$ assets/index-DRWjrz4Q.js [L]
+    RewriteRule ^assets/index\.css$ assets/index-6GAfjYCF.css [L]
+
+    # Prevent assets directory from ever falling through to index.php
+    RewriteRule ^assets/ - [L]
+
+    # If the requested file or directory exists physically, serve it directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Forward all other requests to index.php (Single Page Application routing)
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Security headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+
+    # Aggressive no-cache headers to ensure immediate updates in browser
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</IfModule>

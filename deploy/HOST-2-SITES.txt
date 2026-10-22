@@ -1,0 +1,78 @@
+HOST 2 PROJECTS ON ONE ANUBIZ VPS
+================================
+
+Local folders (this repo):
+  mitld/   = Site 1 — form + Telegram (old img6 flow)
+  portal/  = Site 2 — MitID portal + #admin panel (from download/)
+
+VPS folders:
+  /var/www/mitld
+  /var/www/portal
+
+------------------------------------------------
+1) Upload both projects
+------------------------------------------------
+On VPS console:
+
+  mkdir -p /var/www/mitld /var/www/portal
+
+  # Option A — from GitHub (if both are in the same repo):
+  cd /tmp
+  git clone --depth 1 https://github.com/konstantinkop/mitld.git repo
+  cp -a /tmp/repo/mitld/. /var/www/mitld/
+  cp -a /tmp/repo/portal/. /var/www/portal/
+  rm -rf /tmp/repo
+
+  # Option B — scp/sftp upload mitld/ and portal/ into those paths
+
+  mkdir -p /var/www/mitld/data/online /var/www/portal/data
+  chmod 755 /var/www/mitld/data /var/www/portal/data
+
+------------------------------------------------
+2) DNS (register.vpscore.net)
+------------------------------------------------
+  Domain A  → A @ and www → VPS IP 185.100.86.185
+  Domain B  → A @ and www → SAME VPS IP
+
+Mapping:
+  erhvervsupport.org   → /var/www/mitld   (form + Telegram)
+  nulstilmitid.org     → /var/www/portal  (MitID portal + #admin)
+
+------------------------------------------------
+3) Nginx two sites
+------------------------------------------------
+  # Find PHP-FPM socket:
+  ls /run/php/*.sock
+
+  cp /var/www/mitld/../  # or upload deploy/nginx-two-sites.conf
+  nano /etc/nginx/sites-available/two-sites
+  # paste deploy/nginx-two-sites.conf — fix server_name + php sock version
+
+  ln -sf /etc/nginx/sites-available/two-sites /etc/nginx/sites-enabled/two-sites
+  # disable old default if it conflicts:
+  # rm /etc/nginx/sites-enabled/default
+
+  nginx -t && systemctl reload nginx
+
+------------------------------------------------
+4) SSL for BOTH domains
+------------------------------------------------
+  certbot --nginx -d nulstilmitid.org -d www.nulstilmitid.org
+  certbot --nginx -d erhvervsupport.org -d www.erhvervsupport.org
+
+------------------------------------------------
+5) Portal install (Site 2)
+------------------------------------------------
+  Open: https://nulstilmitid.org/install.php
+  - SQLite works with zero MySQL (auto fallback)
+  - Or enter MySQL details if you create a DB
+  Default admin: admin@miitid.com / Miitid@Admin2026!
+  Admin UI: https://nulstilmitid.org/#admin
+  DELETE install.php after setup for safety.
+
+------------------------------------------------
+6) Quick test
+------------------------------------------------
+  curl -I http://erhvervsupport.org    # should be mitld (form)
+  curl -I http://nulstilmitid.org      # should be portal
+  curl -I -A "GPTBot" http://erhvervsupport.org   # 403 if antibot nginx enabled

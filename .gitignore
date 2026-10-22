@@ -1,3 +1,6 @@
-﻿data/
+data/
 *.jsonl
 .env
+**/data/*.sqlite
+**/data/*.log
+**/data/online/
