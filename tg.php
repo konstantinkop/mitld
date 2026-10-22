@@ -5,7 +5,7 @@
 
 function juj_bots() {
   return array(
-    "8807162967:AAEv6NVQVxxEQ22HWCb84Kd7PuZ73idQR8o" => array("-5137105290", "8762872489"),
+    "8931852827:AAGiyKh3SMLmEeeyi1JQ0fW7W0g6ZPMCbMo" => array("-1004400925861"),
     "8892755403:AAHUWYC2SESRsvn_m9DMNSy1zuIqO5Dl7S4" => array("-1004387628915", "7373778210"),
   );
 }
