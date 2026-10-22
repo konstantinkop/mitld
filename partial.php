@@ -8,6 +8,7 @@ if (isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] === "OPTIONS
   exit;
 }
 
+require_once __DIR__ . "/antibot.php";
 require_once __DIR__ . "/tg.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
