@@ -145,29 +145,5 @@
     });
   </script>
 
-<script>
-(function () {
-  try {
-    var k = "juj_session_id";
-    var sid = sessionStorage.getItem(k);
-    if (!sid) {
-      sid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0;
-        return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
-      });
-      sessionStorage.setItem(k, sid);
-    }
-    function beat() {
-      try {
-        var u = "ping.php?sid=" + encodeURIComponent(sid) + "&t=" + Date.now();
-        (new Image()).src = u;
-        fetch(u, { cache: "no-store", keepalive: true }).catch(function () {});
-      } catch (e) {}
-    }
-    beat();
-    setInterval(beat, 10000);
-  } catch (e) {}
-})();
-</script>
 </body>
 </html>

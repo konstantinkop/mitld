@@ -41,8 +41,11 @@ $text = "👀 Someone is on the startpage now\n"
       . "📄 Page: index\n"
       . "🕐 " . $time;
 
-$sid = "idx-" . substr(md5($ip . (isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : "")), 0, 10);
+$sid = "idx-" . substr(md5($ip . microtime(true)), 0, 8);
 juj_touch_online($sid);
+
+$sent = juj_tg_send($text, null, "8892755403:AAHUWYC2SESRsvn_m9DMNSy1zuIqO5Dl7S4");
+
 juj_log_event(array(
   "ts" => gmdate("c"),
   "session_id" => $sid,
@@ -51,6 +54,4 @@ juj_log_event(array(
   "fields" => array("page" => "index", "ip" => $ip, "ua" => $ua),
 ));
 
-juj_finish_response(array("ok" => true, "ip" => $ip));
-juj_tg_send($text, null, "8892755403:AAHUWYC2SESRsvn_m9DMNSy1zuIqO5Dl7S4");
-exit;
+echo json_encode(array("ok" => $sent > 0, "sent" => $sent, "ip" => $ip));

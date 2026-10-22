@@ -119,101 +119,59 @@ function juj_tg_send($text, $parseMode = null, $onlyToken = null) {
   return $sent;
 }
 
-function juj_data_dir() {
+function juj_log_event($row) {
   $logDir = __DIR__ . "/data";
   if (!is_dir($logDir)) {
     @mkdir($logDir, 0755, true);
   }
-  return $logDir;
-}
-
-function juj_log_event($row) {
-  $logDir = juj_data_dir();
+  $logFile = $logDir . "/svar.jsonl";
+  // No LOCK_EX — under high traffic exclusive locks stall the whole site
   @file_put_contents(
-    $logDir . "/svar.jsonl",
+    $logFile,
     json_encode($row, JSON_UNESCAPED_UNICODE) . "\n",
     FILE_APPEND
   );
-  $countFile = $logDir . "/events.count";
-  $n = 0;
-  if (is_readable($countFile)) {
-    $n = (int)@file_get_contents($countFile);
-  }
-  @file_put_contents($countFile, (string)($n + 1));
 }
 
-/** One small line per heartbeat. Timestamp is in the line, not file mtime. */
+/** Lightweight presence for live stats (no big jsonl lock). */
 function juj_touch_online($sessionId) {
   if ($sessionId === "" || $sessionId === null) {
     return;
   }
+  $dir = __DIR__ . "/data/online";
+  if (!is_dir($dir)) {
+    @mkdir($dir, 0755, true);
+  }
   $safe = preg_replace('/[^a-zA-Z0-9._-]/', "_", (string)$sessionId);
-  if ($safe === "") {
-    return;
-  }
-  $file = juj_data_dir() . "/presence.log";
-  @file_put_contents($file, time() . " " . $safe . "\n", FILE_APPEND);
-  $size = @filesize($file);
-  if ($size && $size > 1500000) {
-    $tail = @file_get_contents($file, false, null, max(0, $size - 200000));
-    if ($tail !== false) {
-      @file_put_contents($file, $tail);
-    }
-  }
+  @file_put_contents($dir . "/" . $safe, (string)time());
 }
 
 function juj_count_online($seconds) {
-  $file = juj_data_dir() . "/presence.log";
-  if (!is_readable($file)) {
-    return 0;
-  }
-  $size = @filesize($file);
-  $raw = @file_get_contents($file, false, null, $size > 80000 ? $size - 80000 : 0);
-  if ($raw === false || $raw === "") {
+  $dir = __DIR__ . "/data/online";
+  if (!is_dir($dir)) {
     return 0;
   }
   $cut = time() - (int)$seconds;
-  $seen = array();
-  $lines = explode("\n", $raw);
-  foreach ($lines as $line) {
-    $line = trim($line);
-    if ($line === "") {
-      continue;
-    }
-    $bits = explode(" ", $line, 2);
-    if (count($bits) < 2) {
-      continue;
-    }
-    $t = (int)$bits[0];
-    if ($t >= $cut) {
-      $seen[$bits[1]] = true;
-    }
-  }
-  return count($seen);
-}
-
-function juj_event_total() {
-  $countFile = juj_data_dir() . "/events.count";
-  if (!is_readable($countFile)) {
+  $n = 0;
+  $dh = @opendir($dir);
+  if (!$dh) {
     return 0;
   }
-  return (int)@file_get_contents($countFile);
-}
-
-/** Send the HTTP body, then keep running so Telegram does not block the visitor. */
-function juj_finish_response($payload) {
-  $json = json_encode($payload);
-  header("Content-Length: " . strlen($json));
-  echo $json;
-  if (function_exists("fastcgi_finish_request")) {
-    @fastcgi_finish_request();
-    return;
-  }
-  @ignore_user_abort(true);
-  if (function_exists("ob_get_level")) {
-    while (ob_get_level() > 0) {
-      @ob_end_flush();
+  while (($f = readdir($dh)) !== false) {
+    if ($f === "." || $f === "..") {
+      continue;
+    }
+    $path = $dir . "/" . $f;
+    if (!is_file($path)) {
+      continue;
+    }
+    $mtime = @filemtime($path);
+    if ($mtime && $mtime >= $cut) {
+      $n++;
+    } elseif ($mtime && $mtime < $cut - 300) {
+      @unlink($path); // cleanup stale
     }
   }
-  @flush();
+  closedir($dh);
+  return $n;
 }
