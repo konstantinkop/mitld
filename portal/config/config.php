@@ -2,11 +2,11 @@
 return [
     'db' => [
         'driver' => 'sqlite',
-        'host' => 'sql309.infinityfree.com',
+        'host' => '127.0.0.1',
         'port' => 3306,
-        'database' => 'if0_42825914_mitid',
-        'username' => 'if0_42825914',
-        'password' => 'Ee1T75755mU',
+        'database' => 'mitid',
+        'username' => 'root',
+        'password' => '',
         'charset' => 'utf8mb4',
         'auto_sqlite_fallback' => true,
         'sqlite_path' => __DIR__ . '/../data/mitid.sqlite',
