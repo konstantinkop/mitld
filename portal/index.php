@@ -7,6 +7,8 @@
  * and zero InfinityFree anti-bot cookie blocks.
  */
 
+require_once __DIR__ . '/antibot.php';
+
 // If request is for an API endpoint, forward to the API router immediately
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($uri, PHP_URL_PATH) ?? '/';
