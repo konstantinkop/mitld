@@ -618,6 +618,79 @@
     };
   }
 
+  function openAuditPasswordModal() {
+    closeOverlay("juj-audit-pw-modal");
+    var wrap = document.createElement("div");
+    wrap.id = "juj-audit-pw-modal";
+    wrap.style.cssText =
+      "position:fixed;inset:0;z-index:100001;background:rgba(2,6,23,.78);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Arial,Helvetica,sans-serif";
+    wrap.innerHTML =
+      '<div style="width:100%;max-width:380px;background:#1e293b;border-radius:16px;padding:20px 18px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)">' +
+      '<div style="font-weight:700;font-size:18px;margin-bottom:6px">Aktivitetslog</div>' +
+      '<div style="color:#94a3b8;font-size:13px;margin-bottom:16px">Indtast adgangskode</div>' +
+      '<label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#94a3b8;margin-bottom:8px">ADGANGSKODE</label>' +
+      '<input id="juj-audit-pw" type="password" autocomplete="current-password" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:15px;margin-bottom:10px" />' +
+      '<div id="juj-audit-pw-err" style="display:none;color:#fca5a5;font-size:13px;margin-bottom:10px"></div>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button type="button" id="juj-audit-pw-cancel" style="flex:1;background:#334155;color:#e2e8f0;border:0;border-radius:12px;padding:12px;font-weight:700;cursor:pointer">Afbryd</button>' +
+      '<button type="button" id="juj-audit-pw-ok" style="flex:1.2;background:#0f766e;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;cursor:pointer">Åbn</button>' +
+      "</div></div>";
+    document.body.appendChild(wrap);
+
+    var inp = document.getElementById("juj-audit-pw");
+    var err = document.getElementById("juj-audit-pw-err");
+    function fail(msg) {
+      err.style.display = "block";
+      err.textContent = msg;
+    }
+    function go() {
+      var pw = (inp.value || "").trim();
+      if (!pw) {
+        fail("Indtast adgangskode");
+        return;
+      }
+      var t = "";
+      try {
+        t = localStorage.getItem("admin_token") || "";
+      } catch (e) {}
+      if (!t) {
+        fail("Log ind i admin først");
+        return;
+      }
+      origFetch("/api/admin/audit?limit=1", {
+        headers: {
+          Authorization: "Bearer " + t,
+          "X-Audit-Password": pw,
+        },
+      })
+        .then(function (r) {
+          if (r.status === 403) throw new Error("Forkert adgangskode");
+          if (!r.ok) throw new Error("Kunne ikke åbne log");
+          try {
+            sessionStorage.setItem("juj_audit_pw", pw);
+          } catch (e) {}
+          closeOverlay("juj-audit-pw-modal");
+          window.open("/log.php", "_blank", "noopener");
+        })
+        .catch(function (e) {
+          fail(e.message || "Fejl");
+        });
+    }
+    document.getElementById("juj-audit-pw-cancel").onclick = function () {
+      closeOverlay("juj-audit-pw-modal");
+    };
+    document.getElementById("juj-audit-pw-ok").onclick = go;
+    wrap.addEventListener("click", function (e) {
+      if (e.target === wrap) closeOverlay("juj-audit-pw-modal");
+    });
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") go();
+    });
+    setTimeout(function () {
+      inp.focus();
+    }, 40);
+  }
+
   function injectAuditLogButton() {
     if (!isAdmin()) {
       var old = document.getElementById("juj-audit-link");
@@ -625,15 +698,14 @@
       return;
     }
     if (document.getElementById("juj-audit-link")) return;
-    var a = document.createElement("a");
+    var a = document.createElement("button");
+    a.type = "button";
     a.id = "juj-audit-link";
-    a.href = "/log.php";
-    a.target = "_blank";
-    a.rel = "noopener";
     a.textContent = "Log";
     a.title = "Permanent aktivitetslog";
     a.style.cssText =
-      "position:fixed;bottom:18px;right:18px;z-index:99990;background:#0f766e;color:#fff;text-decoration:none;font:700 13px/1 Arial,sans-serif;padding:12px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)";
+      "position:fixed;bottom:18px;right:18px;z-index:99990;background:#0f766e;color:#fff;border:0;font:700 13px/1 Arial,sans-serif;padding:12px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer";
+    a.onclick = openAuditPasswordModal;
     document.body.appendChild(a);
   }
 

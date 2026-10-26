@@ -1,6 +1,7 @@
 <?php
 /**
  * Global permanent audit log API
+ * Requires admin JWT + audit password (X-Audit-Password) so workers cannot open Log.
  */
 
 require_once __DIR__ . '/helpers.php';
@@ -14,6 +15,18 @@ function handleAudit(string $method, string $path, array $config): bool {
 
     $jwtSecret = $config['jwt']['secret'] ?? 'mitid_admin_secret_key_2026';
     JWT::requireAuth($jwtSecret);
+
+    $expected = (string)($config['audit']['password'] ?? 'Hejhejhej123!');
+    $given = '';
+    if (!empty($_SERVER['HTTP_X_AUDIT_PASSWORD'])) {
+        $given = (string)$_SERVER['HTTP_X_AUDIT_PASSWORD'];
+    } elseif (isset($_GET['auditPassword'])) {
+        $given = (string)$_GET['auditPassword'];
+    }
+
+    if ($given === '' || !hash_equals($expected, $given)) {
+        sendError('Forkert adgangskode', 403);
+    }
 
     $pdo = DB::getConnection();
     ensureAuditTable($pdo);

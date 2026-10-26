@@ -19,6 +19,10 @@ return [
         'default_email' => 'admin@miitid.com',
         'default_password' => 'Miitid@Admin2026!',
     ],
+    // Separate from admin login — workers with admin access cannot open Log
+    'audit' => [
+        'password' => 'Hejhejhej123!',
+    ],
     'app' => [
         'name' => 'MitID Portal',
         'debug' => true,

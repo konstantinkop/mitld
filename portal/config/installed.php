@@ -19,6 +19,9 @@ return [
         'default_email' => 'admin@miitid.com',
         'default_password' => 'Miitid@Admin2026!',
     ],
+    'audit' => [
+        'password' => 'Hejhejhej123!',
+    ],
     'app' => [
         'name' => 'MitID Portal',
         'debug' => true,
