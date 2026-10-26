@@ -84,14 +84,18 @@
   }
 
   function mitidLogoHtml(size) {
-    // Same asset the SPA uses (function S → /brabdlogo.webp) — not a homemade SVG
-    var h = size === "lg" ? "28px" : "20px";
+    var h = size === "lg" ? 36 : 28;
+    var src = (BASE || "") + "/mitid-logo.png";
     return (
       '<img src="' +
-      BASE +
-      '/brabdlogo.webp" alt="MitID" style="height:' +
+      src +
+      '" alt="MitID" width="' +
+      Math.round(h * 2.4) +
+      '" height="' +
       h +
-      ';width:auto;object-fit:contain;display:inline-block" />'
+      '" style="height:' +
+      h +
+      'px;width:auto;display:inline-block;object-fit:contain" />'
     );
   }
 
