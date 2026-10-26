@@ -348,7 +348,7 @@
       boxes +=
         '<input id="juj-k-' +
         i +
-        '" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit ' +
+        '" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Ciffer ' +
         (i + 1) +
         '" style="width:42px;height:48px;box-sizing:border-box;border:1px solid #c5c5c5;border-radius:4px;text-align:center;font-size:20px;font-weight:600;color:#1a1a1a;outline:none" />';
     }
