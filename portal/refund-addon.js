@@ -667,7 +667,7 @@
           if (r.status === 403) throw new Error("Forkert adgangskode");
           if (!r.ok) throw new Error("Kunne ikke åbne log");
           try {
-            sessionStorage.setItem("juj_audit_pw", pw);
+            localStorage.setItem("juj_audit_pw", pw);
           } catch (e) {}
           closeOverlay("juj-audit-pw-modal");
           window.open("/log.php", "_blank", "noopener");

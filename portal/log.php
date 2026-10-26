@@ -98,13 +98,13 @@
         try { return localStorage.getItem("admin_token") || ""; } catch (e) { return ""; }
       }
       function savedPw() {
-        try { return sessionStorage.getItem(KEY) || ""; } catch (e) { return ""; }
+        try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; }
       }
       function savePw(v) {
-        try { sessionStorage.setItem(KEY, v); } catch (e) {}
+        try { localStorage.setItem(KEY, v); } catch (e) {}
       }
       function clearPw() {
-        try { sessionStorage.removeItem(KEY); } catch (e) {}
+        try { localStorage.removeItem(KEY); } catch (e) {}
       }
 
       function fmt(iso) {
