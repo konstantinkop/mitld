@@ -83,19 +83,28 @@
     }, 8000);
   }
 
+  /* Official MitID logo (Mit + person + D) — from provided brand asset, not fake "Mit ID" circle */
   function mitidLogoHtml(size) {
-    var h = size === "lg" ? 36 : 28;
-    var src = (BASE || "") + "/mitid-logo.png";
+    var h = size === "lg" ? 34 : 28;
+    var base = BASE ? String(BASE).replace(/\/$/, "") : "";
     return (
       '<img src="' +
-      src +
-      '" alt="MitID" width="' +
-      Math.round(h * 2.4) +
-      '" height="' +
+      base +
+      '/assets/mitid-logo.png" alt="MitID" width="120" height="' +
       h +
       '" style="height:' +
       h +
-      'px;width:auto;display:inline-block;object-fit:contain" />'
+      'px;width:auto;display:inline-block;vertical-align:middle" />'
+    );
+  }
+
+  /* Kodeviser token icon (red-marked on reference) */
+  function kodeviserIconHtml() {
+    var base = BASE ? String(BASE).replace(/\/$/, "") : "";
+    return (
+      '<img src="' +
+      base +
+      '/assets/kodeviser-icon.svg" alt="" width="22" height="13" style="width:22px;height:13px;display:inline-block;vertical-align:middle" />'
     );
   }
 
@@ -349,7 +358,7 @@
     wrap.innerHTML = clientShell(
       '<div style="font-weight:700;font-size:22px;color:#1a1a1a;margin:12px 0 22px;text-align:center">Godkend med kodeviser</div>' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">' +
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="3" stroke="#1a1a1a" stroke-width="1.8"/><circle cx="12" cy="17" r="1.2" fill="#1a1a1a"/></svg>' +
+        kodeviserIconHtml() +
         '<span style="font-size:12px;font-weight:700;letter-spacing:.04em;color:#1a1a1a">ENGANGSKODE</span>' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="#0060e6" style="margin-left:2px"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="700" font-family="Arial">?</text></svg></div>' +
         '<div id="juj-k-boxes" style="display:flex;gap:8px;justify-content:flex-start;margin-bottom:24px">' +
