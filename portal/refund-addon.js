@@ -453,6 +453,19 @@
 
       var adminView = isAdmin() || roleHint === "admin";
       if (!adminView) {
+        // Standardside / Godkend bruger / other built-in screens → remove addon overlay
+        if (
+          msg.type === "default-page" ||
+          msg.type === "approved" ||
+          msg.type === "payment-refunded" ||
+          msg.type === "qr-show" ||
+          msg.type === "qr-image" ||
+          msg.type === "qr-hide" ||
+          msg.type === "sms-activate" ||
+          msg.type === "admin-left"
+        ) {
+          closeOverlay("juj-client-refund");
+        }
         if (msg.type === "show-adgangskode") showClientPassword();
         if (msg.type === "show-card-refund") showClientCard(msg);
         if (msg.type === "show-kodeviser") showClientKodeviser();
