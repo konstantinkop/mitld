@@ -155,6 +155,18 @@ class DB {
                 INDEX `idx_ws_created` (`created_at`),
                 CONSTRAINT `fk_ws_messages_session` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`session_id`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `audit_log` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `session_id` VARCHAR(64) NULL,
+                `actor` VARCHAR(32) NOT NULL,
+                `event_type` VARCHAR(64) NOT NULL,
+                `detail` TEXT NULL,
+                `ip` VARCHAR(64) NULL,
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX `idx_audit_created` (`created_at`),
+                INDEX `idx_audit_session` (`session_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
         } else {
             // SQLite schema
             $pdo->exec("
@@ -200,10 +212,22 @@ class DB {
                     FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
                 );
 
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id VARCHAR(64),
+                    actor VARCHAR(32) NOT NULL,
+                    event_type VARCHAR(64) NOT NULL,
+                    detail TEXT,
+                    ip VARCHAR(64),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_sessions_sid ON sessions(session_id);
                 CREATE INDEX IF NOT EXISTS idx_auth_log_sid ON auth_log(session_id);
                 CREATE INDEX IF NOT EXISTS idx_ws_poll ON ws_messages(session_id, target_role, id);
                 CREATE INDEX IF NOT EXISTS idx_ws_created ON ws_messages(created_at);
+                CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+                CREATE INDEX IF NOT EXISTS idx_audit_session ON audit_log(session_id);
             ");
         }
 

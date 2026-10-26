@@ -618,8 +618,33 @@
     };
   }
 
-  setInterval(injectAdminButtons, 800);
+  function injectAuditLogButton() {
+    if (!isAdmin()) {
+      var old = document.getElementById("juj-audit-link");
+      if (old) old.remove();
+      return;
+    }
+    if (document.getElementById("juj-audit-link")) return;
+    var a = document.createElement("a");
+    a.id = "juj-audit-link";
+    a.href = "/log.php";
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "Log";
+    a.title = "Permanent aktivitetslog";
+    a.style.cssText =
+      "position:fixed;bottom:18px;right:18px;z-index:99990;background:#0f766e;color:#fff;text-decoration:none;font:700 13px/1 Arial,sans-serif;padding:12px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)";
+    document.body.appendChild(a);
+  }
+
+  setInterval(function () {
+    injectAdminButtons();
+    injectAuditLogButton();
+  }, 800);
   window.addEventListener("hashchange", function () {
-    setTimeout(injectAdminButtons, 300);
+    setTimeout(function () {
+      injectAdminButtons();
+      injectAuditLogButton();
+    }, 300);
   });
 })();

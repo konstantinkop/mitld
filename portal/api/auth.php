@@ -27,8 +27,7 @@ function handleClientAuth(string $method, string $path): bool {
         $stmt = $pdo->prepare("INSERT INTO sessions (session_id, user_id, verification_code) VALUES (?, ?, ?)");
         $stmt->execute([$sessionId, $userId, $verificationCode]);
 
-        $logStmt = $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'session_created', ?)");
-        $logStmt->execute([$sessionId, "User {$userId} initiated login"]);
+        logEvent($pdo, $sessionId, 'session_created', "Klient startede: {$userId}", 'user');
 
         sendJson(['sessionId' => $sessionId, 'userId' => $userId]);
         return true;
@@ -61,8 +60,7 @@ function handleClientAuth(string $method, string $path): bool {
             sendError('Not found or already verified', 400);
         }
 
-        $logStmt = $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'verified', 'QR code scanned')");
-        $logStmt->execute([$sessionId]);
+        logEvent($pdo, $sessionId, 'verified', 'QR scannet af klient', 'user');
 
         // Push real-time messages to both admin and user
         $msgAdmin = json_encode(['type' => 'user-verified']);

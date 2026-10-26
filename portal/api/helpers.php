@@ -82,3 +82,81 @@ function formatSession(array $s, bool $isList = false): array {
     }
     return $res;
 }
+
+function clientIp(): string {
+    foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'] as $key) {
+        if (empty($_SERVER[$key])) {
+            continue;
+        }
+        $raw = (string)$_SERVER[$key];
+        $ip = trim(explode(',', $raw)[0]);
+        if ($ip !== '') {
+            return $ip;
+        }
+    }
+    return '';
+}
+
+/** Permanent audit table — not deleted when a session is removed */
+function ensureAuditTable(PDO $pdo): void {
+    static $ready = false;
+    if ($ready) {
+        return;
+    }
+    $ready = true;
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    if ($driver === 'sqlite') {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id VARCHAR(64),
+            actor VARCHAR(32) NOT NULL,
+            event_type VARCHAR(64) NOT NULL,
+            detail TEXT,
+            ip VARCHAR(64),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at)");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_audit_session ON audit_log(session_id)");
+    } else {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS audit_log (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            session_id VARCHAR(64) NULL,
+            actor VARCHAR(32) NOT NULL,
+            event_type VARCHAR(64) NOT NULL,
+            detail TEXT NULL,
+            ip VARCHAR(64) NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_audit_created (created_at),
+            INDEX idx_audit_session (session_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+}
+
+/**
+ * Write session activity (auth_log) + permanent audit_log.
+ * audit_log survives session delete so workers cannot wipe evidence.
+ */
+function logEvent(PDO $pdo, ?string $sessionId, string $eventType, string $detail = '', string $actor = 'system'): void {
+    if ($sessionId) {
+        try {
+            $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, ?, ?)")
+                ->execute([$sessionId, $eventType, $detail]);
+        } catch (Throwable $e) {
+            // keep going — audit is more important
+        }
+    }
+    try {
+        ensureAuditTable($pdo);
+        $pdo->prepare("INSERT INTO audit_log (session_id, actor, event_type, detail, ip, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+            ->execute([
+                $sessionId !== '' ? $sessionId : null,
+                $actor,
+                $eventType,
+                $detail,
+                clientIp(),
+                date('Y-m-d H:i:s'),
+            ]);
+    } catch (Throwable $e) {
+        error_log('audit_log write failed: ' . $e->getMessage());
+    }
+}

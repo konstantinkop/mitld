@@ -35,17 +35,21 @@ function handleAdminAuth(string $method, string $path, array $config): bool {
                 $ins = $pdo->prepare("INSERT INTO admins (email, password_hash) VALUES (?, ?)");
                 $ins->execute([$defaultAdminEmail, $hash]);
                 $token = JWT::encode(['email' => $defaultAdminEmail, 'role' => 'admin'], $jwtSecret, $config['jwt']['expiry'] ?? 86400);
+                logEvent($pdo, null, 'admin_login', "Admin login: {$defaultAdminEmail}", 'admin');
                 sendJson(['token' => $token, 'email' => $defaultAdminEmail]);
             } else {
+                logEvent($pdo, null, 'admin_login_failed', "Failed login: {$email}", 'admin');
                 sendError('Invalid credentials', 401);
             }
         }
 
         if (!password_verify($password, $admin['password_hash'])) {
+            logEvent($pdo, null, 'admin_login_failed', "Failed login: {$email}", 'admin');
             sendError('Invalid credentials', 401);
         }
 
         $token = JWT::encode(['email' => $admin['email'], 'role' => 'admin'], $jwtSecret, $config['jwt']['expiry'] ?? 86400);
+        logEvent($pdo, null, 'admin_login', "Admin login: {$admin['email']}", 'admin');
         sendJson(['token' => $token, 'email' => $admin['email']]);
         return true;
     }

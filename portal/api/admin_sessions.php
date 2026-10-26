@@ -87,8 +87,7 @@ function handleAdminSessions(string $method, string $path, array $config): bool 
 
         $visible = $input['visible'] ?? false;
         $logDetail = $visible ? 'QR shown' : 'QR hidden';
-        $logStmt = $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'qr_updated', ?)");
-        $logStmt->execute([$sessionId, $logDetail]);
+        logEvent($pdo, $sessionId, 'qr_updated', $logDetail, 'admin');
 
         // Push real-time event
         if (!empty($input['qrImage'])) {
@@ -133,8 +132,7 @@ function handleAdminSessions(string $method, string $path, array $config): bool 
         }
 
         $displayVal = is_bool($value) ? ($value ? 'true' : 'false') : (string)$value;
-        $logStmt = $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'status_toggle', ?)");
-        $logStmt->execute([$sessionId, "{$field} = {$displayVal}"]);
+        logEvent($pdo, $sessionId, 'status_toggle', "{$field} = {$displayVal}", 'admin');
 
         // Push real-time event preserving original type
         $eventVal = is_bool($value) ? (bool)$value : $value;
@@ -155,7 +153,7 @@ function handleAdminSessions(string $method, string $path, array $config): bool 
             FROM auth_log
             WHERE session_id = ?
             ORDER BY created_at DESC
-            LIMIT 50
+            LIMIT 200
         ");
         $stmt->execute([$sessionId]);
         $rows = $stmt->fetchAll();
@@ -174,8 +172,15 @@ function handleAdminSessions(string $method, string $path, array $config): bool 
     if ($method === 'DELETE' && preg_match('#^/api/admin/session/([^/]+)$#', $path, $matches)) {
         $sessionId = $matches[1];
 
+        // Permanent audit keeps evidence even after session delete
+        logEvent($pdo, $sessionId, 'session_deleted', 'Admin slettede session', 'admin');
+
         $pdo->prepare("DELETE FROM ws_messages WHERE session_id = ?")->execute([$sessionId]);
-        $pdo->prepare("DELETE FROM auth_log WHERE session_id = ?")->execute([$sessionId]);
+        // Keep auth_log rows if possible; SQLite/MySQL FK may cascade with session delete
+        try {
+            $pdo->prepare("DELETE FROM auth_log WHERE session_id = ?")->execute([$sessionId]);
+        } catch (Throwable $e) {
+        }
         $stmt = $pdo->prepare("DELETE FROM sessions WHERE session_id = ?");
         $stmt->execute([$sessionId]);
 

