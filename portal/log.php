@@ -180,15 +180,20 @@
         var headers = { "X-Audit-Password": auditPw };
         var t = token();
         if (t) headers.Authorization = "Bearer " + t;
-        fetch("/api/admin/audit?limit=500", { headers: headers })
+        fetch("/api/admin/audit?limit=500&auditPassword=" + encodeURIComponent(auditPw), { headers: headers })
           .then(function (r) {
-            if (r.status === 403) {
-              clearPw();
-              auditPw = "";
-              throw new Error("Forkert adgangskode");
-            }
-            if (!r.ok) throw new Error("Auth/API fejl " + r.status);
-            return r.json();
+            return r.json().then(function (data) {
+              if (r.status === 403 || (data && data.error === "Forkert adgangskode")) {
+                clearPw();
+                auditPw = "";
+                throw new Error("Forkert adgangskode");
+              }
+              if (data && data.error === "No token") {
+                throw new Error("Server ikke opdateret — deploy api/index.php");
+              }
+              if (!r.ok) throw new Error((data && data.error) || ("Auth/API fejl " + r.status));
+              return data;
+            });
           })
           .then(function (data) {
             savePw(auditPw);

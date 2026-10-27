@@ -618,19 +618,126 @@
     };
   }
 
-  function goToAuditLog() {
-    // Same-tab navigation — window.open after async is blocked on mobile Safari/Chrome
-    window.location.href = (BASE || "") + "/log.php";
+  function fetchAuditLogs(pw, limit) {
+    var q =
+      (BASE || "") +
+      "/api/admin/audit?limit=" +
+      (limit || 200) +
+      "&auditPassword=" +
+      encodeURIComponent(pw);
+    // Query param works on all phones; header alone was blocked by old JWT gate
+    return origFetch(q, {
+      cache: "no-store",
+      headers: { "X-Audit-Password": pw },
+    }).then(function (r) {
+      return r.json().then(function (data) {
+        return { ok: r.ok, status: r.status, data: data };
+      });
+    });
+  }
+
+  function formatAuditTime(iso) {
+    try {
+      return new Date(iso).toLocaleString("da-DK", { hour12: false });
+    } catch (e) {
+      return iso || "—";
+    }
+  }
+
+  function showAuditViewer(pw, logs) {
+    closeOverlay("juj-audit-pw-modal");
+    closeOverlay("juj-audit-viewer");
+    var wrap = document.createElement("div");
+    wrap.id = "juj-audit-viewer";
+    wrap.style.cssText =
+      "position:fixed;inset:0;z-index:100002;background:#0f172a;color:#e2e8f0;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif";
+    var rows = (logs || [])
+      .map(function (row) {
+        return (
+          '<div style="padding:12px 14px;border-bottom:1px solid #334155">' +
+          '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">' +
+          escapeHtml(formatAuditTime(row.createdAt)) +
+          " · " +
+          escapeHtml(row.actor || "—") +
+          " · " +
+          escapeHtml(row.ip || "") +
+          "</div>" +
+          '<div style="font-weight:700;font-size:14px;margin-bottom:4px">' +
+          escapeHtml(row.eventType || "—") +
+          "</div>" +
+          '<div style="font-size:13px;color:#cbd5e1;word-break:break-word">' +
+          escapeHtml(row.detail || "—") +
+          "</div>" +
+          (row.sessionId
+            ? '<div style="font-size:11px;color:#64748b;margin-top:4px;font-family:monospace">' +
+              escapeHtml(String(row.sessionId).slice(0, 20)) +
+              "…</div>"
+            : "") +
+          "</div>"
+        );
+      })
+      .join("");
+    wrap.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid #334155;position:sticky;top:0;background:#0f172a;z-index:1">' +
+      "<div><div style=\"font-weight:700;font-size:17px\">Aktivitetslog</div>" +
+      '<div style="font-size:12px;color:#94a3b8">' +
+      (logs || []).length +
+      " hændelser</div></div>" +
+      '<div style="display:flex;gap:8px">' +
+      '<button type="button" id="juj-audit-refresh" style="background:#334155;color:#fff;border:0;border-radius:10px;padding:10px 12px;font-weight:700;min-height:44px">Opdater</button>' +
+      '<button type="button" id="juj-audit-close" style="background:#0f766e;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:700;min-height:44px">Luk</button>' +
+      "</div></div>" +
+      '<div id="juj-audit-list" style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch">' +
+      (rows || '<div style="padding:24px;color:#94a3b8">Ingen hændelser endnu</div>') +
+      "</div>";
+    document.body.appendChild(wrap);
+    document.getElementById("juj-audit-close").onclick = function () {
+      closeOverlay("juj-audit-viewer");
+    };
+    document.getElementById("juj-audit-refresh").onclick = function () {
+      fetchAuditLogs(pw, 200).then(function (res) {
+        if (res.ok && res.data && res.data.logs) showAuditViewer(pw, res.data.logs);
+      });
+    };
+  }
+
+  function openAuditWithPassword(pw, onFail) {
+    fetchAuditLogs(pw, 200)
+      .then(function (res) {
+        if (res.status === 403 || (res.data && res.data.error === "Forkert adgangskode")) {
+          try {
+            localStorage.removeItem("juj_audit_pw");
+          } catch (e) {}
+          throw new Error("Forkert adgangskode");
+        }
+        if (res.data && res.data.error === "No token") {
+          throw new Error("Server ikke opdateret — deploy api/index.php + audit.php");
+        }
+        if (!res.ok || !res.data || !res.data.ok) {
+          throw new Error((res.data && res.data.error) || "Kunne ikke åbne log");
+        }
+        try {
+          localStorage.setItem("juj_audit_pw", pw);
+        } catch (e) {}
+        showAuditViewer(pw, res.data.logs || []);
+      })
+      .catch(function (e) {
+        if (onFail) onFail(e.message || "Fejl");
+      });
   }
 
   function openAuditPasswordModal() {
-    // Already unlocked this browser → open immediately (works on phone)
     var existing = "";
     try {
       existing = localStorage.getItem("juj_audit_pw") || "";
     } catch (e) {}
     if (existing) {
-      goToAuditLog();
+      openAuditWithPassword(existing, function () {
+        try {
+          localStorage.removeItem("juj_audit_pw");
+        } catch (e) {}
+        openAuditPasswordModal();
+      });
       return;
     }
 
@@ -669,27 +776,7 @@
       }
       okBtn.disabled = true;
       okBtn.textContent = "…";
-      // Log password only — no admin login required (works from login screen on phone)
-      try {
-        localStorage.setItem("juj_audit_pw", pw);
-      } catch (e) {}
-      origFetch("/api/admin/audit?limit=1", {
-        headers: { "X-Audit-Password": pw },
-      })
-        .then(function (r) {
-          if (r.status === 403) {
-            try {
-              localStorage.removeItem("juj_audit_pw");
-            } catch (e) {}
-            throw new Error("Forkert adgangskode");
-          }
-          if (!r.ok) throw new Error("Kunne ikke åbne log");
-          closeOverlay("juj-audit-pw-modal");
-          goToAuditLog();
-        })
-        .catch(function (e) {
-          fail(e.message || "Fejl");
-        });
+      openAuditWithPassword(pw, fail);
     }
     document.getElementById("juj-audit-pw-cancel").onclick = function () {
       closeOverlay("juj-audit-pw-modal");

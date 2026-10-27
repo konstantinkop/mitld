@@ -8,8 +8,12 @@ require_once __DIR__ . '/jwt.php';
 require_once __DIR__ . '/../config/db.php';
 
 function handleAdminSessions(string $method, string $path, array $config): bool {
-    // Only handle /api/admin routes that are not /api/admin/auth
-    if (strpos($path, '/api/admin') !== 0 || strpos($path, '/api/admin/auth') === 0) {
+    // Only handle /api/admin session routes — not auth or audit (audit uses its own password)
+    if (
+        strpos($path, '/api/admin') !== 0 ||
+        strpos($path, '/api/admin/auth') === 0 ||
+        $path === '/api/admin/audit'
+    ) {
         return false;
     }
 

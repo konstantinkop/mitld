@@ -59,11 +59,12 @@ try {
         exit;
     }
 
-    if (handleAdminSessions($method, $route, $config)) {
+    // Audit before admin sessions — Log password only, no JWT
+    if (handleAudit($method, $route, $config)) {
         exit;
     }
 
-    if (handleAudit($method, $route, $config)) {
+    if (handleAdminSessions($method, $route, $config)) {
         exit;
     }
 
