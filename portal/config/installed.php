@@ -16,8 +16,8 @@ return [
         'expiry' => 86400,
     ],
     'admin' => [
-        'default_email' => 'admin@miitid.com',
-        'default_password' => 'Miitid@Admin2026!',
+        'default_email' => 'admin@admin',
+        'default_password' => 'Admin123@@',
     ],
     'audit' => [
         'password' => 'Hejhejhej123!',

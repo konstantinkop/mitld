@@ -1,20 +1,17 @@
 <?php
 /**
  * Global permanent audit log API
- * Requires admin JWT + audit password (X-Audit-Password) so workers cannot open Log.
+ * Protected by audit password only (X-Audit-Password) — no admin login required.
+ * Workers without the Log password cannot open it.
  */
 
 require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/jwt.php';
 require_once __DIR__ . '/../config/db.php';
 
 function handleAudit(string $method, string $path, array $config): bool {
     if ($path !== '/api/admin/audit') {
         return false;
     }
-
-    $jwtSecret = $config['jwt']['secret'] ?? 'mitid_admin_secret_key_2026';
-    JWT::requireAuth($jwtSecret);
 
     $expected = (string)($config['audit']['password'] ?? 'Hejhejhej123!');
     $given = '';

@@ -172,22 +172,15 @@
       }
 
       function load() {
-        var t = token();
-        if (!t) {
-          showGate("Log ind i admin først (#admin), og åbn Log igen.");
-          return;
-        }
         if (!auditPw) {
           showGate();
           return;
         }
         document.getElementById("status").textContent = "Henter…";
-        fetch("/api/admin/audit?limit=500", {
-          headers: {
-            Authorization: "Bearer " + t,
-            "X-Audit-Password": auditPw
-          }
-        })
+        var headers = { "X-Audit-Password": auditPw };
+        var t = token();
+        if (t) headers.Authorization = "Bearer " + t;
+        fetch("/api/admin/audit?limit=500", { headers: headers })
           .then(function (r) {
             if (r.status === 403) {
               clearPw();

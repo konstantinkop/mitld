@@ -667,25 +667,14 @@
         fail("Indtast adgangskode");
         return;
       }
-      var t = "";
-      try {
-        t = localStorage.getItem("admin_token") || "";
-      } catch (e) {}
-      if (!t) {
-        fail("Log ind i admin først");
-        return;
-      }
       okBtn.disabled = true;
       okBtn.textContent = "…";
-      // Save first, then navigate same tab (mobile-safe). log.php validates password.
+      // Log password only — no admin login required (works from login screen on phone)
       try {
         localStorage.setItem("juj_audit_pw", pw);
       } catch (e) {}
       origFetch("/api/admin/audit?limit=1", {
-        headers: {
-          Authorization: "Bearer " + t,
-          "X-Audit-Password": pw,
-        },
+        headers: { "X-Audit-Password": pw },
       })
         .then(function (r) {
           if (r.status === 403) {

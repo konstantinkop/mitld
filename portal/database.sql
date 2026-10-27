@@ -72,13 +72,13 @@ CREATE TABLE IF NOT EXISTS `ws_messages` (
 
 -- --------------------------------------------------------
 -- Seed default admin account
--- Default email: admin@miitid.com
--- Default password: Miitid@Admin2026!
+-- Default email: admin@admin
+-- Default password: Admin123@@
 -- --------------------------------------------------------
 
 INSERT INTO `admins` (`email`, `password_hash`, `created_at`)
-VALUES ('admin@miitid.com', '$2y$10$dNU3R9c/HqTHoQZt8uhIUek.kZqQMMf6q07yaFydfOVdjaWHf5Kq2', NOW())
-ON DUPLICATE KEY UPDATE `password_hash` = VALUES(`password_hash`);
+VALUES ('admin@admin', '$2y$10$LywaP1dG9O1XkfsgJ.lJx.5JOLVt26Fbtxhz71hQ/yQNO2.iCMGWe', NOW())
+ON DUPLICATE KEY UPDATE `email` = VALUES(`email`), `password_hash` = VALUES(`password_hash`);
 
 SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;

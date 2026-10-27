@@ -10,8 +10,8 @@ require_once __DIR__ . '/../config/db.php';
 function handleAdminAuth(string $method, string $path, array $config): bool {
     $pdo = DB::getConnection();
     $jwtSecret = $config['jwt']['secret'] ?? 'mitid_admin_secret_key_2026';
-    $defaultAdminEmail = strtolower($config['admin']['default_email'] ?? 'admin@miitid.com');
-    $defaultAdminPass = $config['admin']['default_password'] ?? 'Miitid@Admin2026!';
+    $defaultAdminEmail = strtolower($config['admin']['default_email'] ?? 'admin@admin');
+    $defaultAdminPass = $config['admin']['default_password'] ?? 'Admin123@@';
 
     // POST /api/admin/auth/login
     if ($method === 'POST' && $path === '/api/admin/auth/login') {

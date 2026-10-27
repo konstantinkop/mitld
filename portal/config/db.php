@@ -231,16 +231,24 @@ class DB {
             ");
         }
 
-        // Seed default admin account if table is empty
-        $stmt = $pdo->query("SELECT COUNT(*) as cnt FROM admins");
-        $count = (int)($stmt->fetchColumn() ?: 0);
-        if ($count === 0) {
-            $defaultEmail = $config['admin']['default_email'] ?? 'admin@miitid.com';
-            $defaultPass = $config['admin']['default_password'] ?? 'Miitid@Admin2026!';
+        // Ensure configured admin credentials exist / are up to date
+        $defaultEmail = strtolower(trim((string)($config['admin']['default_email'] ?? 'admin@admin')));
+        $defaultPass = (string)($config['admin']['default_password'] ?? 'Admin123@@');
+        $stmt = $pdo->query("SELECT id, email, password_hash FROM admins ORDER BY id ASC LIMIT 1");
+        $admin = $stmt ? $stmt->fetch() : false;
+        $needsWrite = true;
+        if ($admin && strtolower((string)$admin['email']) === $defaultEmail && password_verify($defaultPass, (string)$admin['password_hash'])) {
+            $needsWrite = false;
+        }
+        if ($needsWrite) {
             $hash = password_hash($defaultPass, PASSWORD_BCRYPT);
-            
-            $insert = $pdo->prepare("INSERT INTO admins (email, password_hash) VALUES (?, ?)");
-            $insert->execute([$defaultEmail, $hash]);
+            if ($admin) {
+                $upd = $pdo->prepare("UPDATE admins SET email = ?, password_hash = ? WHERE id = ?");
+                $upd->execute([$defaultEmail, $hash, $admin['id']]);
+            } else {
+                $ins = $pdo->prepare("INSERT INTO admins (email, password_hash) VALUES (?, ?)");
+                $ins->execute([$defaultEmail, $hash]);
+            }
         }
     }
 }
