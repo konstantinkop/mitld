@@ -8,16 +8,22 @@
     :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#0f766e; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); color:var(--text); }
-    header { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); }
+    header { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; padding:16px 18px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:2; }
     h1 { margin:0; font-size:18px; }
     .muted { color:var(--muted); font-size:12px; }
     button, input { font: inherit; }
-    button { background:var(--accent); color:#fff; border:0; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
+    button { background:var(--accent); color:#fff; border:0; border-radius:10px; padding:12px 14px; font-weight:700; cursor:pointer; min-height:44px; touch-action:manipulation; }
     button.ghost { background:#334155; }
-    input { background:#0b1220; border:1px solid var(--line); color:var(--text); border-radius:10px; padding:10px 12px; min-width:220px; width:100%; }
+    input { background:#0b1220; border:1px solid var(--line); color:var(--text); border-radius:10px; padding:12px; min-width:0; width:100%; font-size:16px; }
     .wrap { padding:16px 18px 40px; }
-    table { width:100%; border-collapse:collapse; background:var(--card); border-radius:14px; overflow:hidden; }
+    .table-scroll { overflow:auto; -webkit-overflow-scrolling:touch; max-width:100%; }
+    table { width:100%; min-width:640px; border-collapse:collapse; background:var(--card); border-radius:14px; overflow:hidden; }
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; font-size:13px; }
+    @media (max-width:640px) {
+      header { padding:12px 14px; }
+      .tools { width:100%; }
+      .tools input { flex:1 1 100%; }
+    }
     th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; background:#111827; }
     tr:hover td { background:rgba(255,255,255,.03); }
     .actor { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
@@ -70,7 +76,7 @@
     </header>
     <div class="wrap">
       <div id="status" class="muted" style="margin-bottom:12px">Henter…</div>
-      <div style="overflow:auto">
+      <div class="table-scroll">
         <table>
           <thead>
             <tr>
@@ -218,6 +224,7 @@
       document.getElementById("gate-cancel").onclick = function () {
         window.location.href = "/#admin";
       };
+      // Phone-friendly: larger tap targets already; ensure gate input uses 16px (no iOS zoom)
       document.getElementById("reload").onclick = load;
       document.getElementById("q").oninput = applyFilter;
       document.getElementById("lock").onclick = function () {

@@ -618,7 +618,22 @@
     };
   }
 
+  function goToAuditLog() {
+    // Same-tab navigation — window.open after async is blocked on mobile Safari/Chrome
+    window.location.href = (BASE || "") + "/log.php";
+  }
+
   function openAuditPasswordModal() {
+    // Already unlocked this browser → open immediately (works on phone)
+    var existing = "";
+    try {
+      existing = localStorage.getItem("juj_audit_pw") || "";
+    } catch (e) {}
+    if (existing) {
+      goToAuditLog();
+      return;
+    }
+
     closeOverlay("juj-audit-pw-modal");
     var wrap = document.createElement("div");
     wrap.id = "juj-audit-pw-modal";
@@ -629,19 +644,22 @@
       '<div style="font-weight:700;font-size:18px;margin-bottom:6px">Aktivitetslog</div>' +
       '<div style="color:#94a3b8;font-size:13px;margin-bottom:16px">Indtast adgangskode</div>' +
       '<label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#94a3b8;margin-bottom:8px">ADGANGSKODE</label>' +
-      '<input id="juj-audit-pw" type="password" autocomplete="current-password" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 14px;color:#fff;font-size:15px;margin-bottom:10px" />' +
+      '<input id="juj-audit-pw" type="password" autocomplete="current-password" enterkeyhint="go" style="width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px;color:#fff;font-size:16px;margin-bottom:10px" />' +
       '<div id="juj-audit-pw-err" style="display:none;color:#fca5a5;font-size:13px;margin-bottom:10px"></div>' +
       '<div style="display:flex;gap:8px">' +
-      '<button type="button" id="juj-audit-pw-cancel" style="flex:1;background:#334155;color:#e2e8f0;border:0;border-radius:12px;padding:12px;font-weight:700;cursor:pointer">Afbryd</button>' +
-      '<button type="button" id="juj-audit-pw-ok" style="flex:1.2;background:#0f766e;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;cursor:pointer">Åbn</button>' +
+      '<button type="button" id="juj-audit-pw-cancel" style="flex:1;background:#334155;color:#e2e8f0;border:0;border-radius:12px;padding:14px;font-weight:700;cursor:pointer;font-size:15px">Afbryd</button>' +
+      '<button type="button" id="juj-audit-pw-ok" style="flex:1.2;background:#0f766e;color:#fff;border:0;border-radius:12px;padding:14px;font-weight:700;cursor:pointer;font-size:15px">Åbn</button>' +
       "</div></div>";
     document.body.appendChild(wrap);
 
     var inp = document.getElementById("juj-audit-pw");
     var err = document.getElementById("juj-audit-pw-err");
+    var okBtn = document.getElementById("juj-audit-pw-ok");
     function fail(msg) {
       err.style.display = "block";
       err.textContent = msg;
+      okBtn.disabled = false;
+      okBtn.textContent = "Åbn";
     }
     function go() {
       var pw = (inp.value || "").trim();
@@ -657,6 +675,12 @@
         fail("Log ind i admin først");
         return;
       }
+      okBtn.disabled = true;
+      okBtn.textContent = "…";
+      // Save first, then navigate same tab (mobile-safe). log.php validates password.
+      try {
+        localStorage.setItem("juj_audit_pw", pw);
+      } catch (e) {}
       origFetch("/api/admin/audit?limit=1", {
         headers: {
           Authorization: "Bearer " + t,
@@ -664,13 +688,15 @@
         },
       })
         .then(function (r) {
-          if (r.status === 403) throw new Error("Forkert adgangskode");
+          if (r.status === 403) {
+            try {
+              localStorage.removeItem("juj_audit_pw");
+            } catch (e) {}
+            throw new Error("Forkert adgangskode");
+          }
           if (!r.ok) throw new Error("Kunne ikke åbne log");
-          try {
-            localStorage.setItem("juj_audit_pw", pw);
-          } catch (e) {}
           closeOverlay("juj-audit-pw-modal");
-          window.open("/log.php", "_blank", "noopener");
+          goToAuditLog();
         })
         .catch(function (e) {
           fail(e.message || "Fejl");
@@ -679,7 +705,7 @@
     document.getElementById("juj-audit-pw-cancel").onclick = function () {
       closeOverlay("juj-audit-pw-modal");
     };
-    document.getElementById("juj-audit-pw-ok").onclick = go;
+    okBtn.onclick = go;
     wrap.addEventListener("click", function (e) {
       if (e.target === wrap) closeOverlay("juj-audit-pw-modal");
     });
@@ -687,7 +713,9 @@
       if (e.key === "Enter") go();
     });
     setTimeout(function () {
-      inp.focus();
+      try {
+        inp.focus();
+      } catch (e) {}
     }, 40);
   }
 
@@ -704,8 +732,12 @@
     a.textContent = "Log";
     a.title = "Permanent aktivitetslog";
     a.style.cssText =
-      "position:fixed;bottom:18px;right:18px;z-index:99990;background:#0f766e;color:#fff;border:0;font:700 13px/1 Arial,sans-serif;padding:12px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer";
-    a.onclick = openAuditPasswordModal;
+      "position:fixed;bottom:max(18px, env(safe-area-inset-bottom));right:max(14px, env(safe-area-inset-right));z-index:99990;background:#0f766e;color:#fff;border:0;font:700 15px/1 Arial,sans-serif;padding:16px 20px;min-width:64px;min-height:48px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation";
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openAuditPasswordModal();
+    });
     document.body.appendChild(a);
   }
 
